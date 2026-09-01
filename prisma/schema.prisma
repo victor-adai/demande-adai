@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// status: submitted | adjusted | accepted | rejected
+model Demande {
+  id          String    @id @default(cuid())
+  publicToken String    @unique @default(cuid())
+  status      String    @default("submitted")
+
+  currentPack     String
+  selectedModules String // JSON string[]
+
+  client    String // JSON ClientProfile
+  need      String // JSON NeedProfile
+  pricing   String // JSON PricingParams
+  roiAdai   String // JSON RoiAdaiParams — confidential, never sent to the public offer
+  roiClient String // JSON RoiClientParams
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  @@index([status])
+}
+
+// Singleton row (id = "singleton") holding the confidential internal ROI parameters
+model RoiSettings {
+  id             String   @id @default("singleton")
+  resourcePool   Float
+  structureCost  Float
+  directionCost  Float
+  externalCosts  Float
+  licenseCosts   Float
+  otherCosts     Float
+  minMarkup      Float
+  allocationMode String
+  productiveDays Int
+  updatedAt      DateTime @updatedAt
+}

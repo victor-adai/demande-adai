@@ -1,0 +1,39 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+
+const NAV_ITEMS = [
+  { href: "/admin/dashboard", label: "Dashboard" },
+  { href: "/admin/demandes", label: "Demandes" },
+  { href: "/admin/catalogue", label: "Catalogue" },
+  { href: "/admin/parametres", label: "Paramètres" },
+];
+
+export default function AdminSidebar() {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+
+  return (
+    <aside className="admin-sidebar">
+      <div className="brand">ΛDΛI</div>
+      <nav className="admin-nav" aria-label="Navigation admin">
+        {NAV_ITEMS.map((item) => {
+          const active = pathname?.startsWith(item.href);
+          return (
+            <Link key={item.href} href={item.href} data-active={active} aria-current={active ? "page" : undefined}>
+              <span className="label">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="admin-sidebar-footer">
+        <span className="admin-email">{session?.user?.email ?? ""}</span>
+        <button className="admin-logout" onClick={() => signOut({ callbackUrl: "/admin/login" })}>
+          Déconnexion
+        </button>
+      </div>
+    </aside>
+  );
+}
