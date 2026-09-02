@@ -64,6 +64,11 @@ export default async function DemandeDetailPage({ params }: { params: { id: stri
         <h2>3 — Réajustement</h2>
         <ReadjustPanel
           demandeId={demande.id}
+          client={state.client}
+          need={state.need}
+          roiAdai={state.roiAdai}
+          pricing={state.pricing}
+          roiClient={state.roiClient}
           initialPack={state.currentPack}
           initialModules={Array.from(state.selectedModules)}
           initialDiscountRate={state.pricing.discountRate}

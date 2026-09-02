@@ -75,6 +75,7 @@ function makeDemande(overrides: { currentPack: PackKey; selectedModules: string[
     createdAt: new Date(),
     updatedAt: new Date(),
     publishedAt: null,
+    publishedOffer: null,
   };
 }
 

@@ -70,6 +70,7 @@ function makeDemande(overrides: {
     createdAt: new Date(),
     updatedAt: new Date(),
     publishedAt: null,
+    publishedOffer: null,
   };
   return base;
 }

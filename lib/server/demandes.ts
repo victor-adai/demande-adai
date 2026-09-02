@@ -182,13 +182,21 @@ export function evaluatePublishGuard(demande: Demande): PublishGuard {
   };
 }
 
+// Offer integrity (P1) : l'offre publique est figée au moment de la publication, une
+// bonne fois pour toutes — un changement ultérieur du catalogue (prix BUILD/maintenance)
+// ou du moteur ne doit jamais modifier rétroactivement une offre déjà publiée. On calcule
+// donc le payload sanitizé UNE SEULE FOIS ici et on le fige en base (`publishedOffer`) ;
+// getPublishedOfferByToken() ne recalcule plus jamais rien pour une offre déjà publiée.
 export async function publishDemande(id: string) {
   const existing = await prisma.demande.findUnique({ where: { id } });
   if (!existing) return null;
 
+  const payload = demandeToPayload(existing);
+  const offer = sanitizeForPublicOffer(payload);
+
   return prisma.demande.update({
     where: { id },
-    data: { status: "accepted", publishedAt: new Date() },
+    data: { status: "accepted", publishedAt: new Date(), publishedOffer: JSON.stringify(offer) },
   });
 }
 
@@ -196,6 +204,14 @@ export async function getPublishedOfferByToken(token: string) {
   const demande = await prisma.demande.findUnique({ where: { publicToken: token } });
   if (!demande || !demande.publishedAt) return null;
 
+  if (demande.publishedOffer) {
+    return { ...JSON.parse(demande.publishedOffer), published_at: demande.publishedAt };
+  }
+
+  // Backfill for a demande published before the snapshot mechanism existed. Best-effort
+  // recompute, done once, then persisted so this row also becomes immutable going forward.
   const payload = demandeToPayload(demande);
-  return { ...sanitizeForPublicOffer(payload), published_at: demande.publishedAt };
+  const offer = sanitizeForPublicOffer(payload);
+  await prisma.demande.update({ where: { id: demande.id }, data: { publishedOffer: JSON.stringify(offer) } });
+  return { ...offer, published_at: demande.publishedAt };
 }

@@ -4,12 +4,21 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS, type PackKey } from "@/lib/data";
 import { calculate } from "@/lib/engine";
-import type { BuilderState } from "@/lib/types";
+import type { BuilderState, ClientProfile, NeedProfile, PricingParams, RoiAdaiParams, RoiClientParams } from "@/lib/types";
 
 const PACK_ORDER: PackKey[] = ["start", "grow", "scale"];
 
 type Props = {
   demandeId: string;
+  // Real persisted state of the demande (CURRENT) — the preview below is built by
+  // overlaying only the fields the admin is actively editing (pack/modules/discount/
+  // roiValidated) onto this, so it never diverges from what readjustDemande() will
+  // actually persist and what evaluatePublishGuard() will actually check server-side.
+  client: ClientProfile;
+  need: NeedProfile;
+  roiAdai: RoiAdaiParams;
+  pricing: PricingParams;
+  roiClient: RoiClientParams;
   initialPack: PackKey;
   initialModules: string[];
   initialDiscountRate: number;
@@ -19,54 +28,13 @@ type Props = {
   publicUrl: string | null;
 };
 
-const BASE_STATE_SKELETON: Omit<BuilderState, "currentPack" | "selectedModules" | "pricing" | "roiClient"> = {
-  client: {
-    companyName: "",
-    projectName: "",
-    industry: "",
-    subIndustry: "",
-    revenue: "",
-    companySize: "",
-    impactedPeople: "",
-    solutionUsers: "",
-    organization: "Mono-site / 1 entité",
-    siteCount: 1,
-    entityCount: 1,
-    countries: "1 pays",
-    digitalMaturity: "",
-    itCapacity: "",
-    priority: "",
-    timeline: "",
-    budget: "",
-    currentTools: "",
-    painPoints: "",
-  },
-  need: {
-    description: "",
-    currentProcess: "",
-    migration: "Aucune / légère",
-    customization: "Standard",
-    sensitive: "Non",
-    roles: "",
-    deliveryMode: "SCRATCH",
-    integrationCount: 0,
-    volume: "Faible",
-  },
-  roiAdai: {
-    resourcePool: 0,
-    structureCost: 0,
-    directionCost: 0,
-    externalCosts: 0,
-    licenseCosts: 0,
-    otherCosts: 0,
-    minMarkup: 1,
-    allocationMode: "daily",
-  },
-  openDomains: new Set<string>(),
-};
-
 export default function ReadjustPanel({
   demandeId,
+  client,
+  need,
+  roiAdai,
+  pricing,
+  roiClient,
   initialPack,
   initialModules,
   initialDiscountRate,
@@ -84,29 +52,21 @@ export default function ReadjustPanel({
   const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  // CURRENT vs PREVIEW fix (P1) : le preview reprend l'état RÉEL de la demande
+  // (client/need/roiAdai/pricing/roiClient) et n'y superpose que les champs en
+  // cours d'édition — même logique de fusion que readjustDemande() côté serveur.
   const previewState: BuilderState = useMemo(
     () => ({
-      ...BASE_STATE_SKELETON,
+      client,
+      need,
+      roiAdai,
+      openDomains: new Set<string>(),
       currentPack: pack,
       selectedModules: modules,
-      pricing: { discountRate, productiveDays: 20, deliveryConfidence: "Moyenne" },
-      roiClient: {
-        roiValidated,
-        weeklyHours: 0,
-        roiPeople: 1,
-        hourlyCost: 0,
-        automationRate: 0,
-        realizationRate: 0,
-        errorsAvoided: 0,
-        errorCost: 0,
-        toolSavings: 0,
-        additionalRevenue: 0,
-        contributionMargin: 0,
-        fteHours: 1820,
-        activeWeeks: 52,
-      },
+      pricing: { ...pricing, discountRate },
+      roiClient: { ...roiClient, roiValidated },
     }),
-    [pack, modules, discountRate, roiValidated]
+    [client, need, roiAdai, pricing, roiClient, pack, modules, discountRate, roiValidated]
   );
 
   const preview = useMemo(() => calculate(previewState), [previewState]);

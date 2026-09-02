@@ -33,6 +33,12 @@ model Demande {
   updatedAt   DateTime  @updatedAt
   publishedAt DateTime?
 
+  // Offer integrity snapshot: sanitized public-offer JSON frozen at publish time.
+  // Never recomputed afterwards — a later catalog/engine change must not alter an
+  // already-published client offer. Null until first publish (or for legacy rows,
+  // backfilled once on first read — see getPublishedOfferByToken).
+  publishedOffer String?
+
   @@index([status])
 }
 
