@@ -22,7 +22,10 @@ vi.mock("@/lib/prisma", () => ({
     catalogModule: {
       findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn(),
-      $transaction: vi.fn(),
+    },
+    catalogPack: {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn(),
     },
     $transaction: vi.fn(),
   },

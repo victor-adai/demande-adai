@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
       page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
       pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : undefined,
     },
-    catalog.domains
+    catalog.domains,
+    catalog.packs
   );
 
   return NextResponse.json(result);

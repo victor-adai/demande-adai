@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { PACKS, defaultCatalogDomains, type CatalogDomain, type PackKey } from "@/lib/data";
+import { PACKS, defaultCatalogDomains, type CatalogDomain, type Pack, type PackKey } from "@/lib/data";
 import {
   calculate,
   applyPreset,
@@ -174,7 +174,10 @@ export function resetBuilderState(): BuilderState {
   };
 }
 
-export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { domains?: CatalogDomain[] } = {}) {
+export default function CockpitBuilder({
+  domains = defaultCatalogDomains(),
+  packs = PACKS,
+}: { domains?: CatalogDomain[]; packs?: Record<PackKey, Pack> } = {}) {
   const [state, setState] = useState<BuilderState>(() => ({
     ...initialState,
     selectedModules: new Set<string>(),
@@ -183,7 +186,7 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
 
   const [submitStatus, setSubmitStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const result = useMemo<CalculationResult>(() => calculate(state, domains), [state, domains]);
+  const result = useMemo<CalculationResult>(() => calculate(state, domains, packs), [state, domains, packs]);
 
   // DISPLAY STATE ONLY — no engine change. Below a qualified scope, pricing/delivery/ROI
   // figures are not meaningful yet (they're 0 by construction), so we show placeholders
@@ -220,7 +223,7 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
           <a href="#cockpit"><span className="num">07</span>Cockpit & export</a>
         </nav>
         <div className="sideKpis">
-          <div className="sideKpi"><span>Pack</span><b>{PACKS[result.forcedPack].label}</b></div>
+          <div className="sideKpi"><span>Pack</span><b>{packs[result.forcedPack].label}</b></div>
           <div className="sideKpi"><span>Prix</span><b>{euro(result.commercialPrice)}</b></div>
           <div className="sideKpi"><span>Jours</span><b>{result.estimatedDays} j</b></div>
           <div className="sideKpi"><span>Markup</span><b>{pct(result.markupPercent)}</b></div>
@@ -390,8 +393,8 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
           </div>
         </div>
         <div className="packGrid">
-          {(Object.keys(PACKS) as PackKey[]).map((key) => {
-            const pack = PACKS[key];
+          {(Object.keys(packs) as PackKey[]).map((key) => {
+            const pack = packs[key];
             const selected = state.currentPack === key;
             return (
               <button
@@ -711,11 +714,11 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
           <div className="card summary">
             <div className="summaryTop">
               <small>PROPOSITION ACTIVE</small>
-              <h2 style={{ margin: "6px 0 0" }}>{PACKS[result.forcedPack].label}</h2>
+              <h2 style={{ margin: "6px 0 0" }}>{packs[result.forcedPack].label}</h2>
               <div className="summaryPrice">{hasQualifiedScope ? euro(result.commercialPrice) : "À calculer"}</div>
               <small>Valeur catalogue après remise autorisée.</small>
             </div>
-            <div className="row"><span>Socle pack</span><b>{euro(PACKS[result.forcedPack].base)}</b></div>
+            <div className="row"><span>Socle pack</span><b>{euro(packs[result.forcedPack].base)}</b></div>
             <div className="row"><span>Valeur catalogue</span><b>{euro(result.catalogValue)}</b></div>
             <div className="row"><span>Remise</span><b>{Math.round(state.pricing.discountRate * 100)} %</b></div>
             <div className="row"><span>Maintenance</span><b>{euro(result.maintenanceYear1Monthly)}/mois</b></div>
@@ -889,7 +892,7 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
   }
 
   function renderCockpitSection() {
-    const payload = buildPayload(state, result);
+    const payload = buildPayload(state, result, packs);
     const json = JSON.stringify(payload, null, 2);
     return (
       <section id="cockpit" className="section">
@@ -903,7 +906,7 @@ export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { 
           <div className="card formCard">
             <h3 style={{ marginTop: 0 }}>Lecture Cockpit</h3>
             <div className="row"><span>Entreprise</span><b>{state.client.companyName} — {state.client.industry}</b></div>
-            <div className="row"><span>Pack recommandé / actif</span><b>{PACKS[result.forcedPack].label}</b></div>
+            <div className="row"><span>Pack recommandé / actif</span><b>{packs[result.forcedPack].label}</b></div>
             <div className="row"><span>Domaines concernés</span><b>{result.activeDomainNames.length}</b></div>
             <div className="row"><span>Modules retenus</span><b>{result.selectedIds.length}</b></div>
             <div className="row"><span>Prix catalogue</span><b>{euro(result.catalogValue)}</b></div>

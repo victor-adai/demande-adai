@@ -23,7 +23,8 @@ export default async function DemandesListPage({
       status,
       page,
     },
-    catalog.domains
+    catalog.domains,
+    catalog.packs
   );
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

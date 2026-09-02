@@ -1,4 +1,4 @@
-import { DOMAINS, PACKS, PRESETS, type DeliveryMode, type Domain, type PackKey } from "./data";
+import { DOMAINS, PACKS, PRESETS, type DeliveryMode, type Domain, type Pack, type PackKey } from "./data";
 import type { BuilderState, CalculationResult, ExportedPayload } from "./types";
 
 export function euro(n: number): string {
@@ -74,10 +74,15 @@ export function forcedPack(state: BuilderState): PackKey {
   return state.currentPack;
 }
 
-export function estimateDays(pack: PackKey, catalogValue: number, state: BuilderState): number {
+export function estimateDays(
+  pack: PackKey,
+  catalogValue: number,
+  state: BuilderState,
+  packs: Record<PackKey, Pack> = PACKS
+): number {
   const mode = state.need.deliveryMode;
-  let days = PACKS[pack].baseDays[mode] ?? PACKS[pack].baseDays.SCRATCH;
-  const extra = Math.max(0, catalogValue - PACKS[pack].base);
+  let days = packs[pack].baseDays[mode] ?? packs[pack].baseDays.SCRATCH;
+  const extra = Math.max(0, catalogValue - packs[pack].base);
   days += Math.ceil(extra / 1200);
   if (state.need.migration === "Multi-sources") days += 2;
   if (state.need.migration === "Complexe") days += 4;
@@ -90,13 +95,19 @@ export function maintenanceValue(selectedMaint: number): number {
   return Math.max(0, selectedMaint);
 }
 
-// `domains` is the ONE canonical catalogue the engine consumes for module BUILD/maintenance
-// prices. It defaults to the static seed (lib/data.ts DOMAINS) so existing callers/tests keep
-// working unchanged and deterministic; production call sites (server + client, both fed by
-// lib/server/catalog.ts::getCatalog()) always pass the live, admin-editable catalogue
-// explicitly. Prices for an already-selected module are applied regardless of its `active`
-// flag — deactivating a module only hides it from new selections, it never rewrites history.
-export function calculate(state: BuilderState, domains: Domain[] = DOMAINS): CalculationResult {
+// `domains`/`packs` are the ONE canonical catalogue the engine consumes for module and pack
+// BUILD/maintenance prices. Both default to the static seed (lib/data.ts) so existing
+// callers/tests keep working unchanged and deterministic; production call sites (server +
+// client, both fed by lib/server/catalog.ts::getCatalog()) always pass the live,
+// admin-editable catalogue explicitly. Prices for an already-selected module are applied
+// regardless of its `active` flag — deactivating a module only hides it from new selections,
+// it never rewrites history. Pack `label`/`baseDays` (delivery timing, a forcing/engine rule)
+// are never DB-editable — only `base`/`maint` can differ from the static seed.
+export function calculate(
+  state: BuilderState,
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
+): CalculationResult {
   const selected = Array.from(state.selectedModules);
 
   let functional = 0;
@@ -120,7 +131,7 @@ export function calculate(state: BuilderState, domains: Domain[] = DOMAINS): Cal
   const commercial = catalog * (1 - discount);
   const publicMaint = maintenanceValue(maintRaw);
   const maint = publicMaint * (1 - discount);
-  const days = estimateDays(forced, catalog, state);
+  const days = estimateDays(forced, catalog, state, packs);
 
   // ROI ADAI
   const fixedMonthly = state.roiAdai.resourcePool + state.roiAdai.structureCost + state.roiAdai.directionCost;
@@ -200,7 +211,11 @@ export function applyPreset(pack: PackKey): {
   };
 }
 
-export function buildPayload(state: BuilderState, result: CalculationResult): ExportedPayload {
+export function buildPayload(
+  state: BuilderState,
+  result: CalculationResult,
+  packs: Record<PackKey, Pack> = PACKS
+): ExportedPayload {
   const { client, need, pricing, roiAdai, roiClient } = state;
   return {
     version: "V6_MASTER",
@@ -231,8 +246,8 @@ export function buildPayload(state: BuilderState, result: CalculationResult): Ex
       modules: result.selectedIds,
     },
     pricing: {
-      pack: PACKS[result.forcedPack].label,
-      base_pack_price: PACKS[result.forcedPack].base,
+      pack: packs[result.forcedPack].label,
+      base_pack_price: packs[result.forcedPack].base,
       functional_value: result.functionalValue,
       complexity_adjustment: result.complexityAdjustment,
       catalog_value: result.catalogValue,

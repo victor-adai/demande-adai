@@ -10,7 +10,7 @@ export default async function DemandeDetailPage({ params }: { params: { id: stri
   if (!demande) notFound();
 
   const catalog = await getCatalog();
-  const payload = demandeToPayload(demande, catalog.domains);
+  const payload = demandeToPayload(demande, catalog.domains, catalog.packs);
   const state = demandeToBuilderState(demande);
   const publicUrl = demande.publishedAt ? `/offre/${demande.publicToken}` : null;
 
@@ -67,6 +67,7 @@ export default async function DemandeDetailPage({ params }: { params: { id: stri
         <ReadjustPanel
           demandeId={demande.id}
           domains={catalog.domains}
+          packs={catalog.packs}
           client={state.client}
           need={state.need}
           roiAdai={state.roiAdai}

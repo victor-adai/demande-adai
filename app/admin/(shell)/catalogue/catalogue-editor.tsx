@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CatalogDomain } from "@/lib/data";
+import type { CatalogDomain, Pack, PackKey } from "@/lib/data";
 
-type Row = { moduleId: string; name: string; build: number; maint: number; active: boolean };
+type ModuleRow = { moduleId: string; name: string; build: number; maint: number; active: boolean };
+type PackRow = { packKey: PackKey; label: string; base: number; maint: number };
 
-function toRows(domains: CatalogDomain[]): Map<string, Row> {
-  const rows = new Map<string, Row>();
+function toModuleRows(domains: CatalogDomain[]): Map<string, ModuleRow> {
+  const rows = new Map<string, ModuleRow>();
   for (const domain of domains) {
     for (const mod of domain.mods) {
       rows.set(mod.id, { moduleId: mod.id, name: mod.name, build: mod.build, maint: mod.maint, active: mod.active });
@@ -16,18 +17,36 @@ function toRows(domains: CatalogDomain[]): Map<string, Row> {
   return rows;
 }
 
-export default function CatalogueEditor({ initialDomains }: { initialDomains: CatalogDomain[] }) {
+function toPackRows(packs: Record<PackKey, Pack>): Map<PackKey, PackRow> {
+  const rows = new Map<PackKey, PackRow>();
+  (Object.keys(packs) as PackKey[]).forEach((key) => {
+    rows.set(key, { packKey: key, label: packs[key].label, base: packs[key].base, maint: packs[key].maint });
+  });
+  return rows;
+}
+
+export default function CatalogueEditor({
+  initialDomains,
+  initialPacks,
+}: {
+  initialDomains: CatalogDomain[];
+  initialPacks: Record<PackKey, Pack>;
+}) {
   const router = useRouter();
   const [domains, setDomains] = useState(initialDomains);
-  const [rows, setRows] = useState<Map<string, Row>>(() => toRows(initialDomains));
+  const [moduleRows, setModuleRows] = useState<Map<string, ModuleRow>>(() => toModuleRows(initialDomains));
+  const [packs, setPacks] = useState(initialPacks);
+  const [packRows, setPackRows] = useState<Map<PackKey, PackRow>>(() => toPackRows(initialPacks));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const initialRows = useMemo(() => toRows(initialDomains), [initialDomains]);
-  const dirtyIds = useMemo(() => {
+  const initialModuleRows = useMemo(() => toModuleRows(initialDomains), [initialDomains]);
+  const initialPackRows = useMemo(() => toPackRows(initialPacks), [initialPacks]);
+
+  const dirtyModuleIds = useMemo(() => {
     const ids = new Set<string>();
-    Array.from(rows.entries()).forEach(([id, row]) => {
-      const initial = initialRows.get(id);
+    Array.from(moduleRows.entries()).forEach(([id, row]) => {
+      const initial = initialModuleRows.get(id);
       if (!initial) return;
       if (
         row.name !== initial.name ||
@@ -39,14 +58,36 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
       }
     });
     return ids;
-  }, [rows, initialRows]);
+  }, [moduleRows, initialModuleRows]);
 
-  function updateRow<K extends keyof Row>(moduleId: string, key: K, value: Row[K]) {
-    setRows((prev) => {
+  const dirtyPackKeys = useMemo(() => {
+    const keys = new Set<PackKey>();
+    Array.from(packRows.entries()).forEach(([key, row]) => {
+      const initial = initialPackRows.get(key);
+      if (!initial) return;
+      if (row.base !== initial.base || row.maint !== initial.maint) keys.add(key);
+    });
+    return keys;
+  }, [packRows, initialPackRows]);
+
+  const dirtyCount = dirtyModuleIds.size + dirtyPackKeys.size;
+
+  function updateModuleRow<K extends keyof ModuleRow>(moduleId: string, key: K, value: ModuleRow[K]) {
+    setModuleRows((prev) => {
       const next = new Map(prev);
       const current = next.get(moduleId);
       if (!current) return prev;
       next.set(moduleId, { ...current, [key]: value });
+      return next;
+    });
+  }
+
+  function updatePackRow<K extends "base" | "maint">(packKey: PackKey, key: K, value: number) {
+    setPackRows((prev) => {
+      const next = new Map(prev);
+      const current = next.get(packKey);
+      if (!current) return prev;
+      next.set(packKey, { ...current, [key]: value });
       return next;
     });
   }
@@ -57,13 +98,18 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
     const res = await fetch("/api/catalog", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ modules: Array.from(rows.values()) }),
+      body: JSON.stringify({
+        modules: Array.from(moduleRows.values()),
+        packs: Array.from(packRows.values()).map((p) => ({ packKey: p.packKey, base: p.base, maint: p.maint })),
+      }),
     });
     setSaving(false);
     if (res.ok) {
-      const updated = await res.json();
+      const updated: { domains: CatalogDomain[]; packs: Record<PackKey, Pack> } = await res.json();
       setDomains(updated.domains);
-      setRows(toRows(updated.domains));
+      setModuleRows(toModuleRows(updated.domains));
+      setPacks(updated.packs);
+      setPackRows(toPackRows(updated.packs));
       setMessage("Catalogue enregistré et pris en compte immédiatement par le moteur V6.");
       router.refresh();
     } else {
@@ -75,19 +121,62 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
     <div>
       <div className="admin-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0 }}>Catalogue des modules</h2>
+          <h2 style={{ margin: 0 }}>Catalogue</h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-muted)" }}>
-            Libellé, prix BUILD et maintenance modifiables. Les identifiants techniques sont immuables ; désactivez un
-            module au lieu de le supprimer (l&apos;historique des demandes existantes reste inchangé).
+            Prix de base, maintenance et modules modifiables. Les identifiants techniques, le libellé des packs et les
+            règles moteur (delivery, forcing, ROI) restent figés.
           </p>
         </div>
-        <button className="admin-btn" onClick={handleSave} disabled={saving || dirtyIds.size === 0}>
-          {saving ? "Enregistrement..." : dirtyIds.size > 0 ? `Enregistrer (${dirtyIds.size})` : "Enregistrer"}
+        <button className="admin-btn" onClick={handleSave} disabled={saving || dirtyCount === 0}>
+          {saving ? "Enregistrement..." : dirtyCount > 0 ? `Enregistrer (${dirtyCount})` : "Enregistrer"}
         </button>
       </div>
-      {message && (
-        <p style={{ fontSize: 13, margin: "0 0 16px", color: "var(--text-secondary)" }}>{message}</p>
-      )}
+      {message && <p style={{ fontSize: 13, margin: "0 0 16px", color: "var(--text-secondary)" }}>{message}</p>}
+
+      <div className="admin-card">
+        <h2>Packs</h2>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Pack</th>
+              <th>Prix de base (€)</th>
+              <th>Maintenance (€/mois)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(Object.keys(packs) as PackKey[]).map((key) => {
+              const row = packRows.get(key);
+              if (!row) return null;
+              const dirty = dirtyPackKeys.has(key);
+              return (
+                <tr key={key} style={dirty ? { background: "rgba(208, 138, 71, 0.08)" } : undefined}>
+                  <td>{row.label}</td>
+                  <td>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      min={0}
+                      style={{ width: 110 }}
+                      value={row.base}
+                      onChange={(e) => updatePackRow(key, "base", Number(e.target.value))}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="admin-input"
+                      type="number"
+                      min={0}
+                      style={{ width: 110 }}
+                      value={row.maint}
+                      onChange={(e) => updatePackRow(key, "maint", Number(e.target.value))}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {domains.map((domain) => (
         <div className="admin-card" key={domain.key}>
@@ -106,9 +195,9 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
             </thead>
             <tbody>
               {domain.mods.map((mod) => {
-                const row = rows.get(mod.id);
+                const row = moduleRows.get(mod.id);
                 if (!row) return null;
-                const dirty = dirtyIds.has(mod.id);
+                const dirty = dirtyModuleIds.has(mod.id);
                 return (
                   <tr key={mod.id} style={dirty ? { background: "rgba(208, 138, 71, 0.08)" } : undefined}>
                     <td>
@@ -119,7 +208,7 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
                         className="admin-input"
                         style={{ minWidth: 220 }}
                         value={row.name}
-                        onChange={(e) => updateRow(mod.id, "name", e.target.value)}
+                        onChange={(e) => updateModuleRow(mod.id, "name", e.target.value)}
                       />
                     </td>
                     <td>
@@ -129,7 +218,7 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
                         min={0}
                         style={{ width: 110 }}
                         value={row.build}
-                        onChange={(e) => updateRow(mod.id, "build", Number(e.target.value))}
+                        onChange={(e) => updateModuleRow(mod.id, "build", Number(e.target.value))}
                       />
                     </td>
                     <td>
@@ -139,14 +228,14 @@ export default function CatalogueEditor({ initialDomains }: { initialDomains: Ca
                         min={0}
                         style={{ width: 110 }}
                         value={row.maint}
-                        onChange={(e) => updateRow(mod.id, "maint", Number(e.target.value))}
+                        onChange={(e) => updateModuleRow(mod.id, "maint", Number(e.target.value))}
                       />
                     </td>
                     <td>
                       <input
                         type="checkbox"
                         checked={row.active}
-                        onChange={(e) => updateRow(mod.id, "active", e.target.checked)}
+                        onChange={(e) => updateModuleRow(mod.id, "active", e.target.checked)}
                       />
                     </td>
                   </tr>

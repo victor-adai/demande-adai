@@ -58,6 +58,19 @@ model CatalogModule {
   updatedAt DateTime @updatedAt
 }
 
+// Editable pack pricing (V1 scope: base price, maintenance). packKey is the immutable
+// technical id defined in lib/data.ts (PACKS) — label and baseDays (delivery timing per
+// mode) are engine/forcing rules and stay code-defined, never stored here. Same pattern
+// and same guarantees as CatalogModule: only ever updated, never a second row, never
+// deleted. The ONLY live source for pack base/maintenance; lib/data.ts's PACKS is used
+// solely as (a) the seed default and (b) the engine's fallback default parameter.
+model CatalogPack {
+  packKey   String   @id
+  base      Float
+  maint     Float
+  updatedAt DateTime @updatedAt
+}
+
 // Singleton row (id = "singleton") holding the confidential internal ROI parameters
 model RoiSettings {
   id             String   @id @default("singleton")

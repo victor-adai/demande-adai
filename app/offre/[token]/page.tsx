@@ -9,7 +9,7 @@ export default async function PublicOfferPage({ params }: { params: { token: str
   // (a demande published before the snapshot mechanism existed) — every offer published
   // since then is served straight from its frozen publishedOffer, unaffected by the catalogue.
   const catalog = await getCatalog();
-  const offer = await getPublishedOfferByToken(params.token, catalog.domains);
+  const offer = await getPublishedOfferByToken(params.token, catalog.domains, catalog.packs);
   if (!offer) notFound();
 
   return (

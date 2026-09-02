@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { calculate, buildPayload } from "@/lib/engine";
 import type { BuilderState, CalculationResult, ExportedPayload } from "@/lib/types";
-import { DOMAINS, type Domain, type PackKey } from "@/lib/data";
+import { DOMAINS, PACKS, type Domain, type Pack, type PackKey } from "@/lib/data";
 import type { Demande } from "@prisma/client";
 import type { CreateDemandeInput, ReadjustDemandeInput } from "./demande-schema";
 import { sanitizeForPublicOffer } from "./public-offer";
@@ -24,13 +24,21 @@ export function demandeToBuilderState(demande: Demande): BuilderState {
 // `domains` defaults to the static seed so these stay pure/sync and trivially unit-testable
 // (see tests/publish-guard.test.ts, tests/publish-snapshot.test.ts) without a DB. Every real
 // route/page passes the live, admin-editable catalogue explicitly via lib/server/catalog.ts.
-export function demandeToResult(demande: Demande, domains: Domain[] = DOMAINS): CalculationResult {
-  return calculate(demandeToBuilderState(demande), domains);
+export function demandeToResult(
+  demande: Demande,
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
+): CalculationResult {
+  return calculate(demandeToBuilderState(demande), domains, packs);
 }
 
-export function demandeToPayload(demande: Demande, domains: Domain[] = DOMAINS): ExportedPayload {
+export function demandeToPayload(
+  demande: Demande,
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
+): ExportedPayload {
   const state = demandeToBuilderState(demande);
-  return buildPayload(state, calculate(state, domains));
+  return buildPayload(state, calculate(state, domains, packs), packs);
 }
 
 export async function createDemande(input: CreateDemandeInput) {
@@ -55,7 +63,8 @@ export async function listDemandes(
     page?: number;
     pageSize?: number;
   },
-  domains: Domain[] = DOMAINS
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
 ) {
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
@@ -86,7 +95,7 @@ export async function listDemandes(
   return {
     items: filtered.map((r) => {
       const client = JSON.parse(r.client) as { companyName?: string; projectName?: string };
-      const result = demandeToResult(r, domains);
+      const result = demandeToResult(r, domains, packs);
       return {
         id: r.id,
         companyName: client.companyName || "(sans nom)",
@@ -155,9 +164,13 @@ export type PublishGuard = {
 // or complexity rules locally. No override mechanism: unlike the ROI ADAI gate
 // (which has an explicit `force`), a pack/discount inconsistency always blocks
 // publication until the admin actually resolves it.
-export function evaluatePublishGuard(demande: Demande, domains: Domain[] = DOMAINS): PublishGuard {
+export function evaluatePublishGuard(
+  demande: Demande,
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
+): PublishGuard {
   const state = demandeToBuilderState(demande);
-  const result = demandeToResult(demande, domains);
+  const result = demandeToResult(demande, domains, packs);
 
   const selectedPack = state.currentPack;
   const requiredPack = result.forcedPack;
@@ -193,11 +206,11 @@ export function evaluatePublishGuard(demande: Demande, domains: Domain[] = DOMAI
 // ou du moteur ne doit jamais modifier rétroactivement une offre déjà publiée. On calcule
 // donc le payload sanitizé UNE SEULE FOIS ici et on le fige en base (`publishedOffer`) ;
 // getPublishedOfferByToken() ne recalcule plus jamais rien pour une offre déjà publiée.
-export async function publishDemande(id: string, domains: Domain[] = DOMAINS) {
+export async function publishDemande(id: string, domains: Domain[] = DOMAINS, packs: Record<PackKey, Pack> = PACKS) {
   const existing = await prisma.demande.findUnique({ where: { id } });
   if (!existing) return null;
 
-  const payload = demandeToPayload(existing, domains);
+  const payload = demandeToPayload(existing, domains, packs);
   const offer = sanitizeForPublicOffer(payload);
 
   return prisma.demande.update({
@@ -206,7 +219,11 @@ export async function publishDemande(id: string, domains: Domain[] = DOMAINS) {
   });
 }
 
-export async function getPublishedOfferByToken(token: string, domains: Domain[] = DOMAINS) {
+export async function getPublishedOfferByToken(
+  token: string,
+  domains: Domain[] = DOMAINS,
+  packs: Record<PackKey, Pack> = PACKS
+) {
   const demande = await prisma.demande.findUnique({ where: { publicToken: token } });
   if (!demande || !demande.publishedAt) return null;
 
@@ -216,7 +233,7 @@ export async function getPublishedOfferByToken(token: string, domains: Domain[] 
 
   // Backfill for a demande published before the snapshot mechanism existed. Best-effort
   // recompute, done once, then persisted so this row also becomes immutable going forward.
-  const payload = demandeToPayload(demande, domains);
+  const payload = demandeToPayload(demande, domains, packs);
   const offer = sanitizeForPublicOffer(payload);
   await prisma.demande.update({ where: { id: demande.id }, data: { publishedOffer: JSON.stringify(offer) } });
   return { ...offer, published_at: demande.publishedAt };

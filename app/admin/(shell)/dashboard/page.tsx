@@ -14,7 +14,10 @@ export default async function DashboardPage() {
   const total = demandes.length;
   const aTraiter = demandes.filter((d) => d.status === "submitted").length;
   const acceptees = demandes.filter((d) => d.status === "accepted").length;
-  const valeurCommerciale = demandes.reduce((sum, d) => sum + demandeToResult(d, catalog.domains).commercialPrice, 0);
+  const valeurCommerciale = demandes.reduce(
+    (sum, d) => sum + demandeToResult(d, catalog.domains, catalog.packs).commercialPrice,
+    0
+  );
 
   const byStatus = ["submitted", "adjusted", "accepted", "rejected"].map((status) => ({
     status,

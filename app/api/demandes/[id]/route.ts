@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     publishedAt: demande.publishedAt,
     createdAt: demande.createdAt,
     updatedAt: demande.updatedAt,
-    payload: demandeToPayload(demande, catalog.domains),
+    payload: demandeToPayload(demande, catalog.domains, catalog.packs),
   });
 }
 
@@ -41,6 +41,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({
     id: updated.id,
     status: updated.status,
-    payload: demandeToPayload(updated, catalog.domains),
+    payload: demandeToPayload(updated, catalog.domains, catalog.packs),
   });
 }

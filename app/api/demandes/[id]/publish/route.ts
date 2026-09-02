@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const force = body?.force === true;
 
   const catalog = await getCatalog();
-  const guard = evaluatePublishGuard(demande, catalog.domains);
+  const guard = evaluatePublishGuard(demande, catalog.domains, catalog.packs);
 
   // Pack/discount consistency: never overridable, unlike the ROI ADAI gate below.
   if (!guard.packConsistent || !guard.discountWithinLimit) {
@@ -42,6 +42,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     );
   }
 
-  const published = await publishDemande(params.id, catalog.domains);
+  const published = await publishDemande(params.id, catalog.domains, catalog.packs);
   return NextResponse.json({ id: published!.id, publicToken: published!.publicToken, status: published!.status });
 }

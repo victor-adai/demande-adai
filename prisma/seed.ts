@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { DOMAINS } from "../lib/data";
+import { DOMAINS, PACKS, type PackKey } from "../lib/data";
 
 const prisma = new PrismaClient();
 
@@ -54,6 +54,19 @@ async function main() {
     }
   }
   console.log(seededModules > 0 ? `Seeded ${seededModules} catalogue module(s)` : "Catalogue modules already seeded");
+
+  // Catalogue packs — same idempotent pattern: never overwrites an admin's saved price edit.
+  let seededPacks = 0;
+  for (const key of Object.keys(PACKS) as PackKey[]) {
+    const existingPack = await prisma.catalogPack.findUnique({ where: { packKey: key } });
+    if (!existingPack) {
+      await prisma.catalogPack.create({
+        data: { packKey: key, base: PACKS[key].base, maint: PACKS[key].maint },
+      });
+      seededPacks += 1;
+    }
+  }
+  console.log(seededPacks > 0 ? `Seeded ${seededPacks} catalogue pack(s)` : "Catalogue packs already seeded");
 }
 
 main()

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { defaultCatalogDomains, type CatalogDomain, type PackKey } from "@/lib/data";
+import { PACKS, defaultCatalogDomains, type CatalogDomain, type Pack, type PackKey } from "@/lib/data";
 import { calculate } from "@/lib/engine";
 import type { BuilderState, ClientProfile, NeedProfile, PricingParams, RoiAdaiParams, RoiClientParams } from "@/lib/types";
 
@@ -20,6 +20,7 @@ type Props = {
   pricing: PricingParams;
   roiClient: RoiClientParams;
   domains?: CatalogDomain[];
+  packs?: Record<PackKey, Pack>;
   initialPack: PackKey;
   initialModules: string[];
   initialDiscountRate: number;
@@ -37,6 +38,7 @@ export default function ReadjustPanel({
   pricing,
   roiClient,
   domains = defaultCatalogDomains(),
+  packs = PACKS,
   initialPack,
   initialModules,
   initialDiscountRate,
@@ -71,7 +73,7 @@ export default function ReadjustPanel({
     [client, need, roiAdai, pricing, roiClient, pack, modules, discountRate, roiValidated]
   );
 
-  const preview = useMemo(() => calculate(previewState, domains), [previewState, domains]);
+  const preview = useMemo(() => calculate(previewState, domains, packs), [previewState, domains, packs]);
 
   // Admin pack consistency (BO-QA P1): never silently override the admin's pack choice —
   // surface the engine's required minimum and block publication until resolved instead.
