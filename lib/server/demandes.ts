@@ -130,6 +130,58 @@ export async function setDemandeStatus(id: string, status: DemandeStatus) {
   return prisma.demande.update({ where: { id }, data: { status } });
 }
 
+const PACK_ORDER: PackKey[] = ["start", "grow", "scale"];
+
+export type PublishGuard = {
+  allowed: boolean;
+  gate: boolean;
+  selectedPack: PackKey;
+  requiredPack: PackKey;
+  packConsistent: boolean;
+  appliedDiscountPercent: number;
+  maxDiscountPercent: number;
+  discountWithinLimit: boolean;
+  reasons: string[];
+};
+
+// Publication guard — pack and discount consistency. Reuses the V6 engine's own
+// forcedPack()/calculate() output (via demandeToResult); never recomputes pricing
+// or complexity rules locally. No override mechanism: unlike the ROI ADAI gate
+// (which has an explicit `force`), a pack/discount inconsistency always blocks
+// publication until the admin actually resolves it.
+export function evaluatePublishGuard(demande: Demande): PublishGuard {
+  const state = demandeToBuilderState(demande);
+  const result = demandeToResult(demande);
+
+  const selectedPack = state.currentPack;
+  const requiredPack = result.forcedPack;
+  const packConsistent = PACK_ORDER.indexOf(selectedPack) >= PACK_ORDER.indexOf(requiredPack);
+
+  const appliedDiscountPercent = state.pricing.discountRate * 100;
+  const maxDiscountPercent = result.maxDiscountRate;
+  const discountWithinLimit = appliedDiscountPercent <= maxDiscountPercent;
+
+  const reasons: string[] = [];
+  if (!packConsistent) {
+    reasons.push(`Cette configuration nécessite le pack ${requiredPack.toUpperCase()}.`);
+  }
+  if (!discountWithinLimit) {
+    reasons.push("La remise appliquée dépasse la remise maximale autorisée par le moteur V6.");
+  }
+
+  return {
+    allowed: packConsistent && discountWithinLimit,
+    gate: result.gate,
+    selectedPack,
+    requiredPack,
+    packConsistent,
+    appliedDiscountPercent,
+    maxDiscountPercent,
+    discountWithinLimit,
+    reasons,
+  };
+}
+
 export async function publishDemande(id: string) {
   const existing = await prisma.demande.findUnique({ where: { id } });
   if (!existing) return null;

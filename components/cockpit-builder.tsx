@@ -204,9 +204,10 @@ export default function CockpitBuilder() {
           <a href="#domains"><span className="num">03</span>Domaines & modules</a>
           <a href="#need"><span className="num">04</span>Besoin & existant</a>
           <a href="#pricing"><span className="num">05</span>Prix & delivery</a>
-          <a href="#roi-adai"><span className="num">06</span>ROI ADAI</a>
-          <a href="#roi-client"><span className="num">07</span>ROI client</a>
-          <a href="#cockpit"><span className="num">08</span>Cockpit & export</a>
+          {/* Lien ROI ADAI masqué sur l'écran client — réactiver avec la section renderRoiAdaiSection() */}
+          {/* <a href="#roi-adai"><span className="num">06</span>ROI ADAI</a> */}
+          <a href="#roi-client"><span className="num">06</span>ROI client</a>
+          <a href="#cockpit"><span className="num">07</span>Cockpit & export</a>
         </nav>
         <div className="sideKpis">
           <div className="sideKpi"><span>Pack</span><b>{PACKS[result.forcedPack].label}</b></div>
@@ -711,6 +712,8 @@ export default function CockpitBuilder() {
     );
   }
 
+  // Section masquée sur l'écran client (données internes ADAI). Conservée pour réactivation.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function renderRoiAdaiSection() {
     return (
       <section id="roi-adai" className="section">
@@ -795,7 +798,7 @@ export default function CockpitBuilder() {
       <section id="roi-client" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>07 — ROI client</h2>
+            <h2>06 — ROI client</h2>
             <p>La simulation complète est réservée à la revue avec le client. ADAI calibre les hypothèses avant exposition.</p>
           </div>
           <span className="badge amber">REVUE CLIENT</span>
@@ -877,7 +880,7 @@ export default function CockpitBuilder() {
       <section id="cockpit" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>08 — Cockpit & export</h2>
+            <h2>07 — Cockpit & export</h2>
             <p>Synthèse exploitable par Victor : données Front, moteur Back, proposition commerciale, rentabilité et ROI.</p>
           </div>
         </div>
@@ -1004,7 +1007,8 @@ export default function CockpitBuilder() {
         {renderDomainSection()}
         {renderNeedSection()}
         {renderPricingSection()}
-        {renderRoiAdaiSection()}
+        {/* Section ROI ADAI masquée sur l'écran client (données internes) — réactiver ici si besoin */}
+        {/* {renderRoiAdaiSection()} */}
         {renderRoiClientSection()}
         {renderCockpitSection()}
       </main>

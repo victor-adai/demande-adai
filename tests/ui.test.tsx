@@ -142,7 +142,7 @@ describe("EMPTY DISPLAY STATE — placeholders below a qualified scope", () => {
 
     expect(document.querySelector(".summaryPrice")).toHaveTextContent("À calculer");
     expect(screen.getAllByText("À estimer").length).toBeGreaterThan(0);
-    expect(within(document.querySelector("#roi-adai") as HTMLElement).getByText("—")).toBeInTheDocument();
+    // Section #roi-adai masquée sur l'écran client — plus d'assertion sur son placeholder "—"
     expect(screen.getAllByText("EN ATTENTE").length).toBeGreaterThan(0);
 
     const cockpit = within(document.querySelector("#cockpit") as HTMLElement);

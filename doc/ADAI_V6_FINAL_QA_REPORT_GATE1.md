@@ -41,7 +41,7 @@
 | BO-09-b | Offre publique — absence totale de champs internes | SECURITY | JSON sérialisé ne contient jamais project_cost/floor_price/markup/gross_profit/gross_margin/max_discount_rate/gate/roi_adai/roi_client/resourcePool/structureCost/directionCost | Conforme | PASS |
 | BO-09-c | Offre publique — valeurs sanitizées correctes (fixture MTMT) | SECURITY | commercial=2560, maintenance=200, days=5 | Conforme | PASS |
 
-**TOTAL = 55 tests, 55 PASS, 0 FAIL.**
+**TOTAL = 58 tests, 58 PASS, 0 FAIL.** *(55 lors de la première passe de cette matrice ; +3 tests EMPTY DISPLAY STATE ajoutés lors de la correction du P1 — voir section dédiée plus bas.)*
 
 ---
 
@@ -56,7 +56,7 @@
 | MTMT resetState | `resetBuilderState()` retourne `initialState` (aucune référence MTMT) | NO (confirmé) |
 | MTMT fixture only | Seuls `tests/fixtures/mtmt.ts` et les fichiers de test l'importent | YES (confirmé) |
 | DOMAIN/MODULE synchronization | TC-DOMAIN (3 sous-tests) | PASS |
-| EMPTY DISPLAY STATE | Écart détecté — pas de PASS franc (voir section dédiée) | OPEN |
+| EMPTY DISPLAY STATE | Corrigé — `hasQualifiedScope`, moteur inchangé (voir section dédiée) | PASS |
 | ROI ADAI confidentiality | Niveau unitaire : BO-09-a/b/c (PASS). Niveau API : vérifié manuellement (curl, 401 sans session) mais pas encore couvert par un test automatisé | PASS (preuve partielle) |
 | Duplicate interactive IDs | Comptage programmatique des `id:` dans `lib/data.ts` : 71 IDs, 71 uniques, 0 doublon | 0 (confirmé) |
 
@@ -128,7 +128,7 @@ Confirmé par lecture directe du code : `resetBuilderState()` (`components/cockp
 | discount | 0 | ✅ |
 | client | vidé | ✅ |
 | MTMT | absent | ✅ |
-| Affichage (À calculer/À estimer/—/En attente) | placeholders textuels | ❌ non implémenté — voir écart EMPTY DISPLAY STATE |
+| Affichage (À calculer/À estimer/—/En attente) | placeholders textuels | ✅ implémenté — voir section "P1 CORRIGÉ — EMPTY DISPLAY STATE" plus bas |
 
 ---
 

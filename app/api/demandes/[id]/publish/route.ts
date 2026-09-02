@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getDemande, demandeToResult, publishDemande } from "@/lib/server/demandes";
+import { getDemande, publishDemande, evaluatePublishGuard } from "@/lib/server/demandes";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -13,8 +13,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const body = await req.json().catch(() => ({}));
   const force = body?.force === true;
 
-  const result = demandeToResult(demande);
-  if (!result.gate && !force) {
+  const guard = evaluatePublishGuard(demande);
+
+  // Pack/discount consistency: never overridable, unlike the ROI ADAI gate below.
+  if (!guard.packConsistent || !guard.discountWithinLimit) {
+    return NextResponse.json(
+      {
+        error: "CONFIGURATION_INCONSISTENT",
+        message: guard.reasons.join(" "),
+        requiredPack: guard.requiredPack,
+        selectedPack: guard.selectedPack,
+        maxDiscountPercent: guard.maxDiscountPercent,
+        appliedDiscountPercent: guard.appliedDiscountPercent,
+      },
+      { status: 409 }
+    );
+  }
+
+  if (!guard.gate && !force) {
     return NextResponse.json(
       {
         error: "GATE_FAILED",

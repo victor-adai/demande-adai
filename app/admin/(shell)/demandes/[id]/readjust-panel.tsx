@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DOMAINS, type PackKey } from "@/lib/data";
 import { calculate } from "@/lib/engine";
 import type { BuilderState } from "@/lib/types";
+
+const PACK_ORDER: PackKey[] = ["start", "grow", "scale"];
 
 type Props = {
   demandeId: string;
@@ -109,11 +111,11 @@ export default function ReadjustPanel({
 
   const preview = useMemo(() => calculate(previewState), [previewState]);
 
-  // Mirror the client front's own sync (cockpit-builder.tsx): the pack is never a free
-  // admin choice once modules/complexity force a higher tier — same rule, same engine.
-  useEffect(() => {
-    if (preview.forcedPack !== pack) setPack(preview.forcedPack);
-  }, [preview.forcedPack, pack]);
+  // Admin pack consistency (BO-QA P1): never silently override the admin's pack choice —
+  // surface the engine's required minimum and block publication until resolved instead.
+  const isPackBelowMinimum = PACK_ORDER.indexOf(pack) < PACK_ORDER.indexOf(preview.forcedPack);
+  const isDiscountAboveMax = discountRate * 100 > preview.maxDiscountRate;
+  const publishBlockedByGuard = isPackBelowMinimum || isDiscountAboveMax;
 
   function toggleModule(id: string) {
     setModules((prev) => {
@@ -157,7 +159,9 @@ export default function ReadjustPanel({
     setPublishing(false);
     if (res.status === 409) {
       const body = await res.json();
-      setMessage(`${body.message} Publier quand même ?`);
+      setMessage(
+        body.error === "GATE_FAILED" ? `${body.message} Publier quand même ?` : body.message
+      );
       return;
     }
     if (res.ok) {
@@ -186,11 +190,18 @@ export default function ReadjustPanel({
             </button>
           ))}
         </div>
+        <div className="admin-field-row"><span>Pack sélectionné</span><span>{pack.toUpperCase()}</span></div>
+        <div className="admin-field-row"><span>Pack minimum requis</span><span>{preview.forcedPack.toUpperCase()}</span></div>
+        {isPackBelowMinimum && (
+          <p style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>
+            Cette configuration nécessite le pack {preview.forcedPack.toUpperCase()}.
+          </p>
+        )}
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <label htmlFor="discountRate" style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-          Remise ({Math.round(discountRate * 100)} %)
+          Remise
         </label>
         <input
           id="discountRate"
@@ -202,9 +213,11 @@ export default function ReadjustPanel({
           onChange={(e) => setDiscountRate(Number(e.target.value))}
           style={{ width: "100%" }}
         />
-        {discountRate * 100 > preview.maxDiscountRate && (
+        <div className="admin-field-row"><span>Remise appliquée</span><span>{pct(discountRate * 100)}</span></div>
+        <div className="admin-field-row"><span>Remise maximale autorisée</span><span>{pct(preview.maxDiscountRate)}</span></div>
+        {isDiscountAboveMax && (
           <p style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>
-            Remise au-dessus du maximum autorisé par le gate ROI ADAI ({pct(preview.maxDiscountRate)}).
+            Remise au-dessus du maximum autorisé par le moteur V6 ({pct(preview.maxDiscountRate)}).
           </p>
         )}
       </div>
@@ -251,12 +264,18 @@ export default function ReadjustPanel({
         <button
           className="admin-btn secondary"
           onClick={() => handlePublish(message?.includes("quand même") ?? false)}
-          disabled={publishing || status === "accepted"}
+          disabled={publishing || status === "accepted" || publishBlockedByGuard}
+          title={publishBlockedByGuard ? "Configuration incohérente : corrigez le pack ou la remise avant de publier." : undefined}
         >
           {status === "accepted" ? "Déjà publiée" : publishing ? "Publication..." : "Publier l'offre"}
         </button>
       </div>
 
+      {publishBlockedByGuard && (
+        <p style={{ color: "#f87171", fontSize: 12, marginTop: 10 }}>
+          Publication bloquée : la configuration doit être cohérente (pack et remise) avant publication.
+        </p>
+      )}
       {!gate && <p style={{ color: "#f87171", fontSize: 12, marginTop: 10 }}>Gate ROI ADAI actuellement NO-GO.</p>}
       {message && <p style={{ fontSize: 13, marginTop: 10, color: "var(--text-secondary)" }}>{message}</p>}
       {publicUrl && (
