@@ -1,4 +1,4 @@
-import { DOMAINS, PACKS, PRESETS, type DeliveryMode, type PackKey } from "./data";
+import { DOMAINS, PACKS, PRESETS, type DeliveryMode, type Domain, type PackKey } from "./data";
 import type { BuilderState, CalculationResult, ExportedPayload } from "./types";
 
 export function euro(n: number): string {
@@ -90,14 +90,20 @@ export function maintenanceValue(selectedMaint: number): number {
   return Math.max(0, selectedMaint);
 }
 
-export function calculate(state: BuilderState): CalculationResult {
+// `domains` is the ONE canonical catalogue the engine consumes for module BUILD/maintenance
+// prices. It defaults to the static seed (lib/data.ts DOMAINS) so existing callers/tests keep
+// working unchanged and deterministic; production call sites (server + client, both fed by
+// lib/server/catalog.ts::getCatalog()) always pass the live, admin-editable catalogue
+// explicitly. Prices for an already-selected module are applied regardless of its `active`
+// flag — deactivating a module only hides it from new selections, it never rewrites history.
+export function calculate(state: BuilderState, domains: Domain[] = DOMAINS): CalculationResult {
   const selected = Array.from(state.selectedModules);
 
   let functional = 0;
   let maintRaw = 0;
   const activeDomainNamesSet = new Set<string>();
 
-  for (const domain of DOMAINS) {
+  for (const domain of domains) {
     for (const mod of domain.mods) {
       if (state.selectedModules.has(mod.id)) {
         functional += mod.build;

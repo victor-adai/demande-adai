@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { demandeToResult } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const demandes = await prisma.demande.findMany({ orderBy: { createdAt: "desc" } });
+  const [demandes, catalog] = await Promise.all([
+    prisma.demande.findMany({ orderBy: { createdAt: "desc" } }),
+    getCatalog(),
+  ]);
 
   const total = demandes.length;
   const aTraiter = demandes.filter((d) => d.status === "submitted").length;
   const acceptees = demandes.filter((d) => d.status === "accepted").length;
-  const valeurCommerciale = demandes.reduce((sum, d) => sum + demandeToResult(d).commercialPrice, 0);
+  const valeurCommerciale = demandes.reduce((sum, d) => sum + demandeToResult(d, catalog.domains).commercialPrice, 0);
 
   const byStatus = ["submitted", "adjusted", "accepted", "rejected"].map((status) => ({
     status,

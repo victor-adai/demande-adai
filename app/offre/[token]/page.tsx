@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
 import { getPublishedOfferByToken } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicOfferPage({ params }: { params: { token: string } }) {
-  const offer = await getPublishedOfferByToken(params.token);
+  // domains is only consulted by getPublishedOfferByToken() for the legacy backfill path
+  // (a demande published before the snapshot mechanism existed) — every offer published
+  // since then is served straight from its frozen publishedOffer, unaffected by the catalogue.
+  const catalog = await getCatalog();
+  const offer = await getPublishedOfferByToken(params.token, catalog.domains);
   if (!offer) notFound();
 
   return (

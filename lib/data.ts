@@ -313,6 +313,18 @@ export const DOMAINS: Domain[] = [
   },
 ];
 
+// Editable commercial catalogue (V1: name/build/maint/active, admin-modifiable — see
+// lib/server/catalog.ts). DOMAINS above is used ONLY as (a) the seed default for the DB
+// table and (b) the fallback default parameter of calculate()/these types below — no
+// runtime code path other than the seed script and getCatalog()'s empty-DB bootstrap may
+// read module build/maint directly from DOMAINS for actual pricing after seeding.
+export type CatalogModule = ModuleItem & { active: boolean };
+export type CatalogDomain = Omit<Domain, "mods"> & { mods: CatalogModule[] };
+
+export function defaultCatalogDomains(): CatalogDomain[] {
+  return DOMAINS.map((d) => ({ ...d, mods: d.mods.map((m) => ({ ...m, active: true })) }));
+}
+
 export const PRESETS: Record<PackKey, string[]> = {
   start: ["site_premium", "com_meta", "crm_clients", "dir_dashboard"],
   grow: ["site_premium", "com_meta", "dir_cockpit", "plan_booking", "dir_dashboard"],

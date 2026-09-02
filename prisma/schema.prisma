@@ -42,6 +42,22 @@ model Demande {
   @@index([status])
 }
 
+// Editable commercial catalogue (V1 scope: label, BUILD price, maintenance, active flag).
+// moduleId is the immutable technical id defined in lib/data.ts (DOMAINS[].mods[].id) —
+// this table is only ever created/updated by prisma/seed.ts + PUT /api/catalog, never a
+// second row per id, never deleted (soft-delete via `active` to preserve history).
+// This is the ONLY live source for module commercial data: lib/data.ts's DOMAINS array
+// is used solely as (a) the seed default and (b) the engine's fallback default parameter —
+// no other runtime code path may read module build/maint prices from it after seeding.
+model CatalogModule {
+  moduleId  String   @id
+  name      String
+  build     Float
+  maint     Float
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
 // Singleton row (id = "singleton") holding the confidential internal ROI parameters
 model RoiSettings {
   id             String   @id @default("singleton")

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { DOMAINS, PACKS, type PackKey } from "@/lib/data";
+import { PACKS, defaultCatalogDomains, type CatalogDomain, type PackKey } from "@/lib/data";
 import {
   calculate,
   applyPreset,
@@ -126,13 +126,23 @@ function toggleModule(state: BuilderState, modId: string): BuilderState {
   return { ...state, selectedModules: next };
 }
 
-function toggleDomainModules(state: BuilderState, domainKey: string, checked: boolean): BuilderState {
+function toggleDomainModules(
+  state: BuilderState,
+  domainKey: string,
+  checked: boolean,
+  domains: CatalogDomain[]
+): BuilderState {
   const selected = new Set(state.selectedModules);
-  const domain = DOMAINS.find((d) => d.key === domainKey);
+  const domain = domains.find((d) => d.key === domainKey);
   if (!domain) return state;
   for (const mod of domain.mods) {
-    if (checked) selected.add(mod.id);
-    else selected.delete(mod.id);
+    // Never let "select all in domain" newly select an inactive module; unchecking still
+    // removes it if it was already selected (e.g. from before it was deactivated).
+    if (checked) {
+      if (mod.active) selected.add(mod.id);
+    } else {
+      selected.delete(mod.id);
+    }
   }
   return { ...state, selectedModules: selected };
 }
@@ -164,7 +174,7 @@ export function resetBuilderState(): BuilderState {
   };
 }
 
-export default function CockpitBuilder() {
+export default function CockpitBuilder({ domains = defaultCatalogDomains() }: { domains?: CatalogDomain[] } = {}) {
   const [state, setState] = useState<BuilderState>(() => ({
     ...initialState,
     selectedModules: new Set<string>(),
@@ -173,7 +183,7 @@ export default function CockpitBuilder() {
 
   const [submitStatus, setSubmitStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const result = useMemo<CalculationResult>(() => calculate(state), [state]);
+  const result = useMemo<CalculationResult>(() => calculate(state, domains), [state, domains]);
 
   // DISPLAY STATE ONLY — no engine change. Below a qualified scope, pricing/delivery/ROI
   // figures are not meaningful yet (they're 0 by construction), so we show placeholders
@@ -437,7 +447,7 @@ export default function CockpitBuilder() {
             onClick={() =>
               setState((prev) => ({
                 ...prev,
-                openDomains: new Set(DOMAINS.map((d) => d.key)),
+                openDomains: new Set(domains.map((d) => d.key)),
               }))
             }
           >
@@ -457,7 +467,7 @@ export default function CockpitBuilder() {
           </button>
         </div>
         <div className="domainGrid">
-          {DOMAINS.map((domain) => {
+          {domains.map((domain) => {
             const hasSelectedModule = domain.mods.some((m) => state.selectedModules.has(m.id));
             const isOpen = hasSelectedModule || state.openDomains.has(domain.key);
             return (
@@ -468,7 +478,7 @@ export default function CockpitBuilder() {
                     className="domainCheck"
                     data-domain={domain.key}
                     checked={hasSelectedModule}
-                    onChange={(e) => setState((prev) => toggleDomainModules(prev, domain.key, e.target.checked))}
+                    onChange={(e) => setState((prev) => toggleDomainModules(prev, domain.key, e.target.checked, domains))}
                   />
                   <div>
                     <b>{domain.name}</b>
@@ -476,22 +486,27 @@ export default function CockpitBuilder() {
                   </div>
                 </label>
                 <div className="modules">
-                  {domain.mods.map((mod) => (
-                    <label className="moduleLine" key={mod.id}>
-                      <input
-                        type="checkbox"
-                        className="moduleCheck"
-                        data-id={mod.id}
-                        checked={state.selectedModules.has(mod.id)}
-                        onChange={() => setState((prev) => toggleModule(prev, mod.id))}
-                      />
-                      <div>
-                        <b>{mod.name}</b>
-                        <span>{mod.desc}</span>
-                      </div>
-                      <div className="modulePrice">+{euro(mod.build)}</div>
-                    </label>
-                  ))}
+                  {domain.mods.map((mod) => {
+                    const checked = state.selectedModules.has(mod.id);
+                    return (
+                      <label className={`moduleLine${!mod.active ? " inactive" : ""}`} key={mod.id}>
+                        <input
+                          type="checkbox"
+                          className="moduleCheck"
+                          data-id={mod.id}
+                          checked={checked}
+                          disabled={!mod.active && !checked}
+                          onChange={() => setState((prev) => toggleModule(prev, mod.id))}
+                        />
+                        <div>
+                          <b>{mod.name}</b>
+                          <span>{mod.desc}</span>
+                          {!mod.active && <span className="inactiveTag"> · indisponible</span>}
+                        </div>
+                        <div className="modulePrice">+{euro(mod.build)}</div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -899,7 +914,7 @@ export default function CockpitBuilder() {
             <div className="divider" />
             <div className="pillList">
               {result.selectedIds.map((id) => {
-                const mod = DOMAINS.flatMap((d) => d.mods).find((m) => m.id === id);
+                const mod = domains.flatMap((d) => d.mods).find((m) => m.id === id);
                 return mod ? <span className="pill" key={id}>{mod.name}</span> : null;
               })}
             </div>

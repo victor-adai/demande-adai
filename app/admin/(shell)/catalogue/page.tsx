@@ -1,10 +1,19 @@
-import { PACKS, DOMAINS } from "@/lib/data";
+import { PACKS } from "@/lib/data";
+import { getCatalog } from "@/lib/server/catalog";
+import CatalogueEditor from "./catalogue-editor";
 
-export default function CataloguePage() {
+export const dynamic = "force-dynamic";
+
+export default async function CataloguePage() {
+  const catalog = await getCatalog();
+
   return (
     <>
       <div className="admin-card">
         <h2>Packs</h2>
+        <p style={{ margin: "4px 0 16px", fontSize: 13, color: "var(--text-muted)" }}>
+          Socles de pack et règles moteur (delivery, forcing, ROI) — non modifiables depuis le backoffice.
+        </p>
         <table className="admin-table">
           <thead>
             <tr>
@@ -25,35 +34,7 @@ export default function CataloguePage() {
         </table>
       </div>
 
-      {DOMAINS.map((domain) => (
-        <div className="admin-card" key={domain.key}>
-          <h2>
-            {domain.name} <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>· {domain.type}</span>
-          </h2>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Module</th>
-                <th>Build</th>
-                <th>Maintenance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {domain.mods.map((mod) => (
-                <tr key={mod.id}>
-                  <td>
-                    <code style={{ fontSize: 12, color: "var(--text-muted)" }}>{mod.id}</code>
-                  </td>
-                  <td>{mod.name}</td>
-                  <td>{mod.build.toLocaleString("fr-FR")} €</td>
-                  <td>{mod.maint.toLocaleString("fr-FR")} €/mois</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+      <CatalogueEditor initialDomains={catalog.domains} />
     </>
   );
 }

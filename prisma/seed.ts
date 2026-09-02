@@ -1,21 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { DOMAINS } from "../lib/data";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Each concern below is independently idempotent (checked-then-created) — none of them
+  // short-circuits the others, so re-running `pnpm db:seed` on an existing dev.db (e.g. the
+  // admin already exists) still seeds anything still missing (RoiSettings, catalogue rows).
   const email = process.env.ADMIN_SEED_EMAIL ?? "admin@adai.local";
   const password = process.env.ADMIN_SEED_PASSWORD ?? "ChangeMe123!";
 
-  const existing = await prisma.admin.findUnique({ where: { email } });
-  if (existing) {
+  const existingAdmin = await prisma.admin.findUnique({ where: { email } });
+  if (!existingAdmin) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.admin.create({ data: { email, passwordHash } });
+    console.log(`Seeded admin: ${email}`);
+  } else {
     console.log(`Admin already exists: ${email}`);
-    return;
   }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.admin.create({ data: { email, passwordHash } });
-  console.log(`Seeded admin: ${email}`);
 
   const settings = await prisma.roiSettings.findUnique({ where: { id: "singleton" } });
   if (!settings) {
@@ -35,6 +38,22 @@ async function main() {
     });
     console.log("Seeded default RoiSettings");
   }
+
+  // Catalogue modules — created once per moduleId, never overwritten by re-seeding, so an
+  // admin's price/label/active edits in the BO are never clobbered by a later `db:seed` run.
+  let seededModules = 0;
+  for (const domain of DOMAINS) {
+    for (const mod of domain.mods) {
+      const existingModule = await prisma.catalogModule.findUnique({ where: { moduleId: mod.id } });
+      if (!existingModule) {
+        await prisma.catalogModule.create({
+          data: { moduleId: mod.id, name: mod.name, build: mod.build, maint: mod.maint, active: true },
+        });
+        seededModules += 1;
+      }
+    }
+  }
+  console.log(seededModules > 0 ? `Seeded ${seededModules} catalogue module(s)` : "Catalogue modules already seeded");
 }
 
 main()

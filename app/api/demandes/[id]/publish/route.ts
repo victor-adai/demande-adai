@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDemande, publishDemande, evaluatePublishGuard } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const body = await req.json().catch(() => ({}));
   const force = body?.force === true;
 
-  const guard = evaluatePublishGuard(demande);
+  const catalog = await getCatalog();
+  const guard = evaluatePublishGuard(demande, catalog.domains);
 
   // Pack/discount consistency: never overridable, unlike the ROI ADAI gate below.
   if (!guard.packConsistent || !guard.discountWithinLimit) {
@@ -40,6 +42,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     );
   }
 
-  const published = await publishDemande(params.id);
+  const published = await publishDemande(params.id, catalog.domains);
   return NextResponse.json({ id: published!.id, publicToken: published!.publicToken, status: published!.status });
 }

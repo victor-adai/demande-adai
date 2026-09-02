@@ -19,6 +19,12 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn().mockResolvedValue(null),
       update: vi.fn(),
     },
+    catalogModule: {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn(),
+      $transaction: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 

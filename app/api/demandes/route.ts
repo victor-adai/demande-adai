@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { CreateDemandeSchema } from "@/lib/server/demande-schema";
 import { createDemande, listDemandes, type DemandeStatus } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 
 const STATUSES = ["submitted", "adjusted", "accepted", "rejected"];
 
@@ -14,12 +15,16 @@ export async function GET(req: NextRequest) {
   const statusParam = searchParams.get("status");
   const status = statusParam && STATUSES.includes(statusParam) ? (statusParam as DemandeStatus) : undefined;
 
-  const result = await listDemandes({
-    search: searchParams.get("search") ?? undefined,
-    status,
-    page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
-    pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : undefined,
-  });
+  const catalog = await getCatalog();
+  const result = await listDemandes(
+    {
+      search: searchParams.get("search") ?? undefined,
+      status,
+      page: searchParams.get("page") ? Number(searchParams.get("page")) : undefined,
+      pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : undefined,
+    },
+    catalog.domains
+  );
 
   return NextResponse.json(result);
 }

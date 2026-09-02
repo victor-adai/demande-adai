@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DOMAINS, type PackKey } from "@/lib/data";
+import { defaultCatalogDomains, type CatalogDomain, type PackKey } from "@/lib/data";
 import { calculate } from "@/lib/engine";
 import type { BuilderState, ClientProfile, NeedProfile, PricingParams, RoiAdaiParams, RoiClientParams } from "@/lib/types";
 
@@ -19,6 +19,7 @@ type Props = {
   roiAdai: RoiAdaiParams;
   pricing: PricingParams;
   roiClient: RoiClientParams;
+  domains?: CatalogDomain[];
   initialPack: PackKey;
   initialModules: string[];
   initialDiscountRate: number;
@@ -35,6 +36,7 @@ export default function ReadjustPanel({
   roiAdai,
   pricing,
   roiClient,
+  domains = defaultCatalogDomains(),
   initialPack,
   initialModules,
   initialDiscountRate,
@@ -69,7 +71,7 @@ export default function ReadjustPanel({
     [client, need, roiAdai, pricing, roiClient, pack, modules, discountRate, roiValidated]
   );
 
-  const preview = useMemo(() => calculate(previewState), [previewState]);
+  const preview = useMemo(() => calculate(previewState, domains), [previewState, domains]);
 
   // Admin pack consistency (BO-QA P1): never silently override the admin's pack choice —
   // surface the engine's required minimum and block publication until resolved instead.
@@ -194,15 +196,34 @@ export default function ReadjustPanel({
           Modules ({modules.size} sélectionné{modules.size > 1 ? "s" : ""})
         </summary>
         <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 10 }}>
-          {DOMAINS.map((domain) => (
+          {domains.map((domain) => (
             <div key={domain.key} style={{ marginBottom: 10 }}>
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>{domain.name}</div>
-              {domain.mods.map((mod) => (
-                <label key={mod.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "2px 0" }}>
-                  <input type="checkbox" checked={modules.has(mod.id)} onChange={() => toggleModule(mod.id)} />
-                  {mod.name}
-                </label>
-              ))}
+              {domain.mods.map((mod) => {
+                const checked = modules.has(mod.id);
+                return (
+                  <label
+                    key={mod.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 13,
+                      padding: "2px 0",
+                      opacity: !mod.active ? 0.55 : 1,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!mod.active && !checked}
+                      onChange={() => toggleModule(mod.id)}
+                    />
+                    {mod.name}
+                    {!mod.active && <span style={{ fontStyle: "italic", color: "var(--accent)" }}> · indisponible</span>}
+                  </label>
+                );
+              })}
             </div>
           ))}
         </div>

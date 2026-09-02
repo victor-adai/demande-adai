@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDemande, demandeToPayload, demandeToBuilderState } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 import ReadjustPanel from "./readjust-panel";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,8 @@ export default async function DemandeDetailPage({ params }: { params: { id: stri
   const demande = await getDemande(params.id);
   if (!demande) notFound();
 
-  const payload = demandeToPayload(demande);
+  const catalog = await getCatalog();
+  const payload = demandeToPayload(demande, catalog.domains);
   const state = demandeToBuilderState(demande);
   const publicUrl = demande.publishedAt ? `/offre/${demande.publicToken}` : null;
 
@@ -64,6 +66,7 @@ export default async function DemandeDetailPage({ params }: { params: { id: stri
         <h2>3 — Réajustement</h2>
         <ReadjustPanel
           demandeId={demande.id}
+          domains={catalog.domains}
           client={state.client}
           need={state.need}
           roiAdai={state.roiAdai}

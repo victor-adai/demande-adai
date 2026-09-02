@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listDemandes, type DemandeStatus } from "@/lib/server/demandes";
+import { getCatalog } from "@/lib/server/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,15 @@ export default async function DemandesListPage({
     : undefined;
   const page = searchParams.page ? Number(searchParams.page) : 1;
 
-  const { items, total, pageSize } = await listDemandes({
-    search: searchParams.search,
-    status,
-    page,
-  });
+  const catalog = await getCatalog();
+  const { items, total, pageSize } = await listDemandes(
+    {
+      search: searchParams.search,
+      status,
+      page,
+    },
+    catalog.domains
+  );
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
