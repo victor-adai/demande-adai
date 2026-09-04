@@ -157,7 +157,7 @@ export default function ReadjustPanel({
         <div className="admin-field-row"><span>Pack sélectionné</span><span>{pack.toUpperCase()}</span></div>
         <div className="admin-field-row"><span>Pack minimum requis</span><span>{preview.forcedPack.toUpperCase()}</span></div>
         {isPackBelowMinimum && (
-          <p style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>
+          <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 4 }}>
             Cette configuration nécessite le pack {preview.forcedPack.toUpperCase()}.
           </p>
         )}
@@ -180,7 +180,7 @@ export default function ReadjustPanel({
         <div className="admin-field-row"><span>Remise appliquée</span><span>{pct(discountRate * 100)}</span></div>
         <div className="admin-field-row"><span>Remise maximale autorisée</span><span>{pct(preview.maxDiscountRate)}</span></div>
         {isDiscountAboveMax && (
-          <p style={{ color: "#f87171", fontSize: 12, marginTop: 4 }}>
+          <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 4 }}>
             Remise au-dessus du maximum autorisé par le moteur V6 ({pct(preview.maxDiscountRate)}).
           </p>
         )}
@@ -255,11 +255,11 @@ export default function ReadjustPanel({
       </div>
 
       {publishBlockedByGuard && (
-        <p style={{ color: "#f87171", fontSize: 12, marginTop: 10 }}>
+        <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}>
           Publication bloquée : la configuration doit être cohérente (pack et remise) avant publication.
         </p>
       )}
-      {!gate && <p style={{ color: "#f87171", fontSize: 12, marginTop: 10 }}>Gate ROI ADAI actuellement NO-GO.</p>}
+      {!gate && <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}>Gate ROI ADAI actuellement NO-GO.</p>}
       {message && <p style={{ fontSize: 13, marginTop: 10, color: "var(--text-secondary)" }}>{message}</p>}
       {publicUrl && (
         <p style={{ fontSize: 13, marginTop: 10 }}>

@@ -35,8 +35,27 @@ export default function AdminLoginPage() {
   return (
     <div className="admin-login-shell">
       <form className="admin-login-card" onSubmit={handleSubmit}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>ΛDΛI Backoffice</h1>
-        <p style={{ fontSize: 13, color: "#a8a29e", marginBottom: 24 }}>Connexion administrateur</p>
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            background: "linear-gradient(135deg, var(--accent), var(--accent-light))",
+            marginBottom: 16,
+          }}
+        />
+        <h1
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontStyle: "italic",
+            fontSize: 22,
+            fontWeight: 600,
+            marginBottom: 4,
+          }}
+        >
+          ΛDΛI Backoffice
+        </h1>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>Connexion administrateur</p>
 
         <label htmlFor="email" style={{ fontSize: 13, display: "block", marginBottom: 6 }}>
           Email
@@ -65,7 +84,7 @@ export default function AdminLoginPage() {
         />
 
         {error && (
-          <p role="alert" style={{ color: "#f87171", fontSize: 13, marginBottom: 12 }}>
+          <p role="alert" style={{ color: "var(--danger)", fontSize: 13, marginBottom: 12 }}>
             {error}
           </p>
         )}

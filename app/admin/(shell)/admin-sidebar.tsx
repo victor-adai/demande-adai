@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 const NAV_ITEMS = [
-  { href: "/admin/dashboard", label: "Dashboard" },
-  { href: "/admin/demandes", label: "Demandes" },
-  { href: "/admin/catalogue", label: "Catalogue" },
-  { href: "/admin/parametres", label: "Paramètres" },
+  { href: "/admin/dashboard", label: "Dashboard", icon: "fa-table-cells-large" },
+  { href: "/admin/demandes", label: "Demandes", icon: "fa-inbox" },
+  { href: "/admin/catalogue", label: "Catalogue", icon: "fa-book" },
+  { href: "/admin/parametres", label: "Paramètres", icon: "fa-gear" },
 ];
 
 export default function AdminSidebar() {
@@ -23,6 +23,7 @@ export default function AdminSidebar() {
           const active = pathname?.startsWith(item.href);
           return (
             <Link key={item.href} href={item.href} data-active={active} aria-current={active ? "page" : undefined}>
+              <i className={`fa-solid ${item.icon}`} aria-hidden="true" />
               <span className="label">{item.label}</span>
             </Link>
           );
@@ -31,6 +32,7 @@ export default function AdminSidebar() {
       <div className="admin-sidebar-footer">
         <span className="admin-email">{session?.user?.email ?? ""}</span>
         <button className="admin-logout" onClick={() => signOut({ callbackUrl: "/admin/login" })}>
+          <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
           Déconnexion
         </button>
       </div>

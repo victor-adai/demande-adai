@@ -15,11 +15,36 @@ export default function AdminHeader() {
     TITLES[pathname] ??
     (pathname.startsWith("/admin/demandes/") ? "Détail demande" : "Backoffice");
 
+  const isProd = process.env.NODE_ENV === "production";
+
   return (
     <header className="admin-header">
       <h1>{title}</h1>
-      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-        {process.env.NODE_ENV === "production" ? "PRODUCTION" : "DÉVELOPPEMENT"}
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          color: isProd ? "var(--success-text)" : "var(--text-muted)",
+          background: isProd ? "var(--success-bg)" : "var(--elevated)",
+          border: `1px solid ${isProd ? "var(--success-bg)" : "var(--border)"}`,
+          borderRadius: 999,
+          padding: "4px 10px",
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: isProd ? "var(--success)" : "var(--text-muted)",
+          }}
+        />
+        {isProd ? "Production" : "Développement"}
       </span>
     </header>
   );
