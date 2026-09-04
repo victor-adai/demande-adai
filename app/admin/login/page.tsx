@@ -89,7 +89,8 @@ export default function AdminLoginPage() {
       <div className="login-right">
         <div className="login-form-wrap">
           <div className="login-brand-row">
-            <div className="mark-box" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/adai-logo.png" alt="ΛDΛI" className="mark-box" />
             <span>ΛDΛI Backoffice</span>
           </div>
           <span className="login-brand-sub">Administration</span>
