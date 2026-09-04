@@ -51,6 +51,11 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
+      # The deploy key's authorized_keys entry on the VPS is a forced command
+      # (`command="bash /home/adai/deploy.sh"`, restricted to that script only).
+      # It must NOT also carry `no-pty`: appleboy/ssh-action requests a PTY for
+      # streaming output, and the server rejecting that request fails the step
+      # almost immediately (~30-40s) — well before the real script could run.
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
