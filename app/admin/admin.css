@@ -604,11 +604,8 @@
 .login-brand-row .mark-box {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
   flex-shrink: 0;
-  object-fit: cover;
-  object-position: center 30%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  object-fit: contain;
 }
 
 .login-brand-row span {
