@@ -11,7 +11,6 @@ import {
   buildPayload,
 } from "@/lib/engine";
 import type { BuilderState, CalculationResult } from "@/lib/types";
-import LanguageSwitcher from "@/components/language-switcher";
 
 const initialState: BuilderState = {
   client: {
@@ -210,7 +209,6 @@ export default function CockpitBuilder({
         <div className="brand">
           ΛDΛI<small>{t("sidebar.tagline")}</small>
         </div>
-        <LanguageSwitcher variant="front" />
         <div className="sideTag">
           <b>{t("sidebar.badge")}</b>
           <span>{t("sidebar.badgeDesc")}</span>
