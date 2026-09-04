@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import LanguageSwitcher from "./language-switcher";
+import LanguageSwitcher from "@/components/language-switcher";
 
 export default function AdminHeader() {
   const pathname = usePathname() ?? "";

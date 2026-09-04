@@ -1,16 +1,30 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import CockpitBuilder from "@/components/cockpit-builder";
+import messages from "@/messages/fr.json";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
+function renderCockpit() {
+  return render(
+    <NextIntlClientProvider locale="fr" messages={messages}>
+      <CockpitBuilder />
+    </NextIntlClientProvider>
+  );
+}
 
 describe("TC-13B — ROI CLIENT DISPLAY LOCK", () => {
   it("shows lock message when ROI is not validated", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     expect(screen.getByText(/Simulation masquée : valider les hypothèses ADAI/i)).toBeInTheDocument();
     expect(screen.queryByText(/Heures récupérables/i)).not.toBeInTheDocument();
   });
 
   it("shows ROI values after validation toggle", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     const toggle = screen.getByLabelText(/Hypothèses ROI validées par ADAI/i);
     fireEvent.click(toggle);
     const roiSection = document.querySelector("#roi-client");
@@ -27,7 +41,7 @@ describe("TC-15 — SAVE CLIENT REQUEST", () => {
   it("saves payload to localStorage when clicking Sauvegarder", () => {
     const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {});
     vi.spyOn(window, "alert").mockImplementation(() => {});
-    render(<CockpitBuilder />);
+    renderCockpit();
     const saveBtn = screen.getByText(/Sauvegarder demande client/i);
     fireEvent.click(saveBtn);
     expect(setItem).toHaveBeenCalled();
@@ -41,7 +55,7 @@ describe("TC-15 — SAVE CLIENT REQUEST", () => {
 describe("TC-16 — PRINT / PDF", () => {
   it("calls window.print when clicking Imprimer", () => {
     const print = vi.spyOn(window, "print").mockImplementation(() => {});
-    render(<CockpitBuilder />);
+    renderCockpit();
     const printBtn = screen.getByText(/Imprimer demande client \/ PDF/i);
     fireEvent.click(printBtn);
     expect(print).toHaveBeenCalled();
@@ -54,7 +68,7 @@ describe("TC-17B — COPY JSON", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     vi.spyOn(window, "alert").mockImplementation(() => {});
-    render(<CockpitBuilder />);
+    renderCockpit();
     const copyBtn = screen.getByText(/Copier JSON/i);
     fireEvent.click(copyBtn);
     await waitFor(() => expect(writeText).toHaveBeenCalled());
@@ -70,7 +84,7 @@ describe("TC-17C — DOWNLOAD JSON", () => {
     const revokeObjectURL = vi.fn();
     vi.stubGlobal("URL", { createObjectURL, revokeObjectURL });
 
-    render(<CockpitBuilder />);
+    renderCockpit();
     const downloadBtn = screen.getByText(/Télécharger JSON/i);
     fireEvent.click(downloadBtn);
 
@@ -83,7 +97,7 @@ describe("TC-17C — DOWNLOAD JSON", () => {
 
 describe("TC-DOMAIN — Domain / module interactions", () => {
   it("selecting a module activates its domain", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     const moduleCheck = document.querySelector(`input[data-id="site_premium"]`) as HTMLInputElement;
     if (!moduleCheck) throw new Error("site_premium module checkbox not found");
     fireEvent.click(moduleCheck);
@@ -92,7 +106,7 @@ describe("TC-DOMAIN — Domain / module interactions", () => {
   });
 
   it('"Réinitialiser les modules" clears all selections', () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     const moduleCheck = document.querySelector(`input[data-id="site_premium"]`) as HTMLInputElement;
     fireEvent.click(moduleCheck);
     expect(moduleCheck.checked).toBe(true);
@@ -103,7 +117,7 @@ describe("TC-DOMAIN — Domain / module interactions", () => {
   });
 
   it('"Tout ouvrir" activates all domains without selecting modules', () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     const openBtn = screen.getByText(/Tout ouvrir/i);
     fireEvent.click(openBtn);
     const activeDomains = document.querySelectorAll(".domain.active");
@@ -115,7 +129,7 @@ describe("TC-DOMAIN — Domain / module interactions", () => {
 
 describe("TC-RESET — Generic reset from UI", () => {
   it("reset button returns to START and clears modules", async () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
     const moduleCheck = document.querySelector(`input[data-id="site_premium"]`) as HTMLInputElement;
     fireEvent.click(moduleCheck);
     expect(moduleCheck.checked).toBe(true);
@@ -138,7 +152,7 @@ describe("TC-RESET — Generic reset from UI", () => {
 
 describe("EMPTY DISPLAY STATE — placeholders below a qualified scope", () => {
   it("generic initial state shows placeholders, not misleading zeros", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
 
     expect(document.querySelector(".summaryPrice")).toHaveTextContent("À calculer");
     expect(screen.getAllByText("À estimer").length).toBeGreaterThan(0);
@@ -151,7 +165,7 @@ describe("EMPTY DISPLAY STATE — placeholders below a qualified scope", () => {
   });
 
   it("selecting a real module replaces placeholders with calculated values", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
 
     const moduleCheck = document.querySelector(`input[data-id="site_premium"]`) as HTMLInputElement;
     fireEvent.click(moduleCheck);
@@ -165,7 +179,7 @@ describe("EMPTY DISPLAY STATE — placeholders below a qualified scope", () => {
   });
 
   it("placeholders reappear after reset", () => {
-    render(<CockpitBuilder />);
+    renderCockpit();
 
     const moduleCheck = document.querySelector(`input[data-id="site_premium"]`) as HTMLInputElement;
     fireEvent.click(moduleCheck);

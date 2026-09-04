@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { PACKS, defaultCatalogDomains, type CatalogDomain, type Pack, type PackKey } from "@/lib/data";
 import {
   calculate,
@@ -10,6 +11,7 @@ import {
   buildPayload,
 } from "@/lib/engine";
 import type { BuilderState, CalculationResult } from "@/lib/types";
+import LanguageSwitcher from "@/components/language-switcher";
 
 const initialState: BuilderState = {
   client: {
@@ -178,6 +180,8 @@ export default function CockpitBuilder({
   domains = defaultCatalogDomains(),
   packs = PACKS,
 }: { domains?: CatalogDomain[]; packs?: Record<PackKey, Pack> } = {}) {
+  const t = useTranslations("Cockpit");
+  const tOpt = useTranslations("CockpitOptions");
   const [state, setState] = useState<BuilderState>(() => ({
     ...initialState,
     selectedModules: new Set<string>(),
@@ -204,29 +208,30 @@ export default function CockpitBuilder({
     return (
       <aside className="sidebar">
         <div className="brand">
-          ΛDΛI<small>THINK • BUILD • SCALE</small>
+          ΛDΛI<small>{t("sidebar.tagline")}</small>
         </div>
+        <LanguageSwitcher variant="front" />
         <div className="sideTag">
-          <b>V6 MASTER</b>
-          <span>Front + Back • Packs • Domaines • ROI ADAI • ROI Client</span>
+          <b>{t("sidebar.badge")}</b>
+          <span>{t("sidebar.badgeDesc")}</span>
         </div>
-        <p className="navTitle">Parcours</p>
+        <p className="navTitle">{t("sidebar.navTitle")}</p>
         <nav className="nav">
-          <a href="#client"><span className="num">01</span>Connaître le client</a>
-          <a href="#packs"><span className="num">02</span>Socle d&apos;offre</a>
-          <a href="#domains"><span className="num">03</span>Domaines & modules</a>
-          <a href="#need"><span className="num">04</span>Besoin & existant</a>
-          <a href="#pricing"><span className="num">05</span>Prix & delivery</a>
+          <a href="#client"><span className="num">01</span>{t("sidebar.nav1")}</a>
+          <a href="#packs"><span className="num">02</span>{t("sidebar.nav2")}</a>
+          <a href="#domains"><span className="num">03</span>{t("sidebar.nav3")}</a>
+          <a href="#need"><span className="num">04</span>{t("sidebar.nav4")}</a>
+          <a href="#pricing"><span className="num">05</span>{t("sidebar.nav5")}</a>
           {/* Lien ROI ADAI masqué sur l'écran client — réactiver avec la section renderRoiAdaiSection() */}
           {/* <a href="#roi-adai"><span className="num">06</span>ROI ADAI</a> */}
-          <a href="#roi-client"><span className="num">06</span>ROI client</a>
-          <a href="#cockpit"><span className="num">07</span>Cockpit & export</a>
+          <a href="#roi-client"><span className="num">06</span>{t("sidebar.nav6")}</a>
+          <a href="#cockpit"><span className="num">07</span>{t("sidebar.nav7")}</a>
         </nav>
         <div className="sideKpis">
-          <div className="sideKpi"><span>Pack</span><b>{packs[result.forcedPack].label}</b></div>
-          <div className="sideKpi"><span>Prix</span><b>{euro(result.commercialPrice)}</b></div>
-          <div className="sideKpi"><span>Jours</span><b>{result.estimatedDays} j</b></div>
-          <div className="sideKpi"><span>Markup</span><b>{pct(result.markupPercent)}</b></div>
+          <div className="sideKpi"><span>{t("sidebar.kpiPack")}</span><b>{packs[result.forcedPack].label}</b></div>
+          <div className="sideKpi"><span>{t("sidebar.kpiPrice")}</span><b>{euro(result.commercialPrice)}</b></div>
+          <div className="sideKpi"><span>{t("sidebar.kpiDays")}</span><b>{result.estimatedDays} {t("units.day")}</b></div>
+          <div className="sideKpi"><span>{t("sidebar.kpiMarkup")}</span><b>{pct(result.markupPercent)}</b></div>
         </div>
       </aside>
     );
@@ -236,34 +241,31 @@ export default function CockpitBuilder({
     return (
       <section className="hero">
         <div className="card heroMain">
-          <div className="kicker">Cockpit Builder ADAI — V6 MASTER</div>
+          <div className="kicker">{t("hero.kicker")}</div>
           <h1>
-            Qualifier. Configurer. <span>Rentabiliser.</span>
+            {t("hero.titleLine1")} <span>{t("hero.titleLine2")}</span>
           </h1>
-          <p className="lead">
-            Base opérationnelle du Cockpit Builder ADAI : le Front reste simple pour le client, le Back conserve le détail fonctionnel,
-            la valeur catalogue, la charge de delivery, la rentabilité ADAI et le ROI client validé en revue.
-          </p>
+          <p className="lead">{t("hero.lead")}</p>
           <div className="chips">
-            <span className="chip">START 3 500 €</span>
-            <span className="chip">GROW 4 500 €</span>
-            <span className="chip">SCALE 7 000 €</span>
+            <span className="chip">{t("hero.chipStart")}</span>
+            <span className="chip">{t("hero.chipGrow")}</span>
+            <span className="chip">{t("hero.chipScale")}</span>
           </div>
         </div>
         <div className="card why">
-          <h2>Règle V6</h2>
-          <p>La complexité client, le temps de production ADAI, le prix de vente et la valeur client sont quatre dimensions distinctes.</p>
+          <h2>{t("hero.ruleTitle")}</h2>
+          <p>{t("hero.ruleLead")}</p>
           <div className="reason">
             <div className="mark">01</div>
-            <div><b>Valeur catalogue</b><span>Somme des briques et adaptations du périmètre.</span></div>
+            <div><b>{t("hero.reason1Title")}</b><span>{t("hero.reason1Text")}</span></div>
           </div>
           <div className="reason">
             <div className="mark">02</div>
-            <div><b>Rentabilité interne</b><span>Le prix final doit respecter le floor ADAI et le markup cible.</span></div>
+            <div><b>{t("hero.reason2Title")}</b><span>{t("hero.reason2Text")}</span></div>
           </div>
           <div className="reason">
             <div className="mark">03</div>
-            <div><b>ROI client contrôlé</b><span>Les hypothèses ne deviennent visibles qu&apos;après validation ADAI.</span></div>
+            <div><b>{t("hero.reason3Title")}</b><span>{t("hero.reason3Text")}</span></div>
           </div>
         </div>
       </section>
@@ -287,7 +289,7 @@ export default function CockpitBuilder({
           onChange={(e) => setState((prev) => updateClient(prev, key, e.target.value as BuilderState["client"][K]))}
         >
           {options.map((opt) => (
-            <option key={opt}>{opt}</option>
+            <option key={opt} value={opt}>{tOpt(opt)}</option>
           ))}
         </select>
       );
@@ -322,61 +324,61 @@ export default function CockpitBuilder({
       <section id="client" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>01 — Connaître le client</h2>
-            <p>Étoffe le socle entreprise sans confondre effectif, personnes impactées et utilisateurs directs.</p>
+            <h2>{t("client.title")}</h2>
+            <p>{t("client.desc")}</p>
           </div>
         </div>
         <div className="card formCard">
           <div className="formGrid">
-            {clientField("Nom de l'entreprise", "companyName", "text")}
-            {clientField("Projet", "projectName", "text")}
-            {clientField("Secteur d'activité", "industry", "text")}
-            {clientField("Sous-secteur / métier", "subIndustry", "text")}
+            {clientField(t("client.companyName"), "companyName", "text")}
+            {clientField(t("client.projectName"), "projectName", "text")}
+            {clientField(t("client.industry"), "industry", "text")}
+            {clientField(t("client.subIndustry"), "subIndustry", "text")}
             {clientField(
-              "CA annuel",
+              t("client.revenue"),
               "revenue",
               "select",
               ["< 100 k€", "100–500 k€", "500 k€–2 M€", "2–10 M€", "10 M€+"]
             )}
             {clientField(
-              "Effectif total",
+              t("client.companySize"),
               "companySize",
               "select",
               ["1–10", "11–25", "26–50", "51–100", "101–250", "250+"]
             )}
             {clientField(
-              "Personnes concernées par le besoin",
+              t("client.impactedPeople"),
               "impactedPeople",
               "select",
               ["1–3", "4–10", "11–25", "26–50", "51–100", "100+"]
             )}
             {clientField(
-              "Utilisateurs directs de la solution",
+              t("client.solutionUsers"),
               "solutionUsers",
               "select",
               ["1–10", "11–25", "26–50", "51–100", "101–250", "250+"]
             )}
             {clientField(
-              "Organisation",
+              t("client.organization"),
               "organization",
               "select",
               ["Mono-site / 1 entité", "Multi-sites", "Multi-entités", "Groupe / réseau", "Multi-pays"]
             )}
-            {clientField("Nombre de sites", "siteCount", "number")}
-            {clientField("Nombre d'entités", "entityCount", "number")}
-            {clientField("Pays concernés", "countries", "select", ["1 pays", "2–3 pays", "4+ pays"])}
-            {clientField("Maturité digitale", "digitalMaturity", "select", ["Faible", "Intermédiaire", "Avancée"])}
-            {clientField("Équipe IT", "itCapacity", "select", ["Aucune", "Prestataire", "Interne", "Mixte"])}
-            {clientField("Priorité", "priority", "select", ["Faible", "Moyenne", "Forte", "Critique"])}
-            {clientField("Délai souhaité", "timeline", "select", ["< 1 mois", "1–3 mois", "3–6 mois", "6 mois+"])}
+            {clientField(t("client.siteCount"), "siteCount", "number")}
+            {clientField(t("client.entityCount"), "entityCount", "number")}
+            {clientField(t("client.countries"), "countries", "select", ["1 pays", "2–3 pays", "4+ pays"])}
+            {clientField(t("client.digitalMaturity"), "digitalMaturity", "select", ["Faible", "Intermédiaire", "Avancée"])}
+            {clientField(t("client.itCapacity"), "itCapacity", "select", ["Aucune", "Prestataire", "Interne", "Mixte"])}
+            {clientField(t("client.priority"), "priority", "select", ["Faible", "Moyenne", "Forte", "Critique"])}
+            {clientField(t("client.timeline"), "timeline", "select", ["< 1 mois", "1–3 mois", "3–6 mois", "6 mois+"])}
             {clientField(
-              "Budget envisagé",
+              t("client.budget"),
               "budget",
               "select",
               ["Non communiqué", "< 3 500 €", "3 500–7 000 €", "7 000–15 000 €", "15 000 €+"]
             )}
-            {clientField("Outils actuels", "currentTools", "text", undefined, true)}
-            {clientField("Qu'est-ce qui coûte aujourd'hui le plus de temps ou d'argent ?", "painPoints", "text", undefined, false, true)}
+            {clientField(t("client.currentTools"), "currentTools", "text", undefined, true)}
+            {clientField(t("client.painPoints"), "painPoints", "text", undefined, false, true)}
           </div>
         </div>
       </section>
@@ -388,8 +390,8 @@ export default function CockpitBuilder({
       <section id="packs" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>02 — Socle d&apos;offre</h2>
-            <p>Les trois packs sont des références commerciales. Le périmètre réel reste ajustable module par module.</p>
+            <h2>{t("packs.title")}</h2>
+            <p>{t("packs.desc")}</p>
           </div>
         </div>
         <div className="packGrid">
@@ -406,23 +408,20 @@ export default function CockpitBuilder({
               >
                 <span className="label">{pack.label}</span>
                 <h3>
-                  {key === "start" && "Digitaliser & centraliser"}
-                  {key === "grow" && "Structurer & piloter"}
-                  {key === "scale" && "Industrialiser & consolider"}
+                  {key === "start" && t("packs.startTitle")}
+                  {key === "grow" && t("packs.growTitle")}
+                  {key === "scale" && t("packs.scaleTitle")}
                 </h3>
                 <p>
-                  {key === "start" &&
-                    "Un premier système métier cadré, mono-site, avec peu d'intégrations et une personnalisation limitée."}
-                  {key === "grow" &&
-                    "Un système métier opérationnel avec cockpit, workflow, automatisations et pilotage quotidien."}
-                  {key === "scale" &&
-                    "Multi-sites / entités, API, Data/BI, IA avancée, sécurité et consolidation."}
+                  {key === "start" && t("packs.startDesc")}
+                  {key === "grow" && t("packs.growDesc")}
+                  {key === "scale" && t("packs.scaleDesc")}
                 </p>
                 <div className="price">{pack.base.toLocaleString("fr-FR")} €</div>
                 <div className="maint">
-                  {key === "start" && "Maintenance indicative : 150–200 €/mois selon périmètre"}
-                  {key === "grow" && "Maintenance de référence : 350 €/mois"}
-                  {key === "scale" && "Maintenance indicative : ≈700 €/mois selon périmètre"}
+                  {key === "start" && t("packs.startMaint")}
+                  {key === "grow" && t("packs.growMaint")}
+                  {key === "scale" && t("packs.scaleMaint")}
                 </div>
               </button>
             );
@@ -437,13 +436,13 @@ export default function CockpitBuilder({
       <section id="domains" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>03 — Domaines & modules</h2>
-            <p>9 domaines métier de Victor + domaines transversaux ADAI. Chaque sélection alimente le périmètre et la valeur catalogue.</p>
+            <h2>{t("domains.title")}</h2>
+            <p>{t("domains.desc")}</p>
           </div>
         </div>
         <div className="domainToolbar">
           <button className="miniBtn" onClick={() => setState((prev) => applyPresetToState(prev, result.forcedPack))}>
-            Recharger le preset du pack
+            {t("domains.reloadPreset")}
           </button>
           <button
             className="miniBtn"
@@ -454,7 +453,7 @@ export default function CockpitBuilder({
               }))
             }
           >
-            Tout ouvrir
+            {t("domains.openAll")}
           </button>
           <button
             className="miniBtn"
@@ -466,7 +465,7 @@ export default function CockpitBuilder({
               }))
             }
           >
-            Réinitialiser les modules
+            {t("domains.resetModules")}
           </button>
         </div>
         <div className="domainGrid">
@@ -504,7 +503,7 @@ export default function CockpitBuilder({
                         <div>
                           <b>{mod.name}</b>
                           <span>{mod.desc}</span>
-                          {!mod.active && <span className="inactiveTag"> · indisponible</span>}
+                          {!mod.active && <span className="inactiveTag"> · {t("domains.inactiveTag")}</span>}
                         </div>
                         <div className="modulePrice">+{euro(mod.build)}</div>
                       </label>
@@ -524,14 +523,14 @@ export default function CockpitBuilder({
       <section id="need" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>04 — Besoin, existant & complexité</h2>
-            <p>Questions complémentaires utilisées pour justifier le pack et préparer le delivery.</p>
+            <h2>{t("need.title")}</h2>
+            <p>{t("need.desc")}</p>
           </div>
         </div>
         <div className="card formCard">
           <div className="formGrid">
             <div className="field full">
-              <label htmlFor="needDescription">Description du besoin / objectif</label>
+              <label htmlFor="needDescription">{t("need.description")}</label>
               <textarea
                 id="needDescription"
                 value={state.need.description}
@@ -539,68 +538,68 @@ export default function CockpitBuilder({
               />
             </div>
             <div className="field">
-              <label htmlFor="currentProcess">Process actuel</label>
+              <label htmlFor="currentProcess">{t("need.currentProcess")}</label>
               <select
                 id="currentProcess"
                 value={state.need.currentProcess}
                 onChange={(e) => setState((prev) => updateNeed(prev, "currentProcess", e.target.value))}
               >
-                <option>Majoritairement manuel</option>
-                <option>Mixte manuel + outils</option>
-                <option>Déjà digitalisé</option>
+                <option value="Majoritairement manuel">{tOpt("Majoritairement manuel")}</option>
+                <option value="Mixte manuel + outils">{tOpt("Mixte manuel + outils")}</option>
+                <option value="Déjà digitalisé">{tOpt("Déjà digitalisé")}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="migration">Migration de données</label>
+              <label htmlFor="migration">{t("need.migration")}</label>
               <select
                 id="migration"
                 value={state.need.migration}
                 onChange={(e) => setState((prev) => updateNeed(prev, "migration", e.target.value))}
               >
-                <option>Aucune / légère</option>
-                <option>Simple</option>
-                <option>Multi-sources</option>
-                <option>Complexe</option>
+                <option value="Aucune / légère">{tOpt("Aucune / légère")}</option>
+                <option value="Simple">{tOpt("Simple")}</option>
+                <option value="Multi-sources">{tOpt("Multi-sources")}</option>
+                <option value="Complexe">{tOpt("Complexe")}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="customization">Niveau de personnalisation</label>
+              <label htmlFor="customization">{t("need.customization")}</label>
               <select
                 id="customization"
                 value={state.need.customization}
                 onChange={(e) => setState((prev) => updateNeed(prev, "customization", e.target.value))}
               >
-                <option>Standard</option>
-                <option>Adaptation légère</option>
-                <option>Adaptation significative</option>
-                <option>Spécifique</option>
+                <option value="Standard">{tOpt("Standard")}</option>
+                <option value="Adaptation légère">{tOpt("Adaptation légère")}</option>
+                <option value="Adaptation significative">{tOpt("Adaptation significative")}</option>
+                <option value="Spécifique">{tOpt("Spécifique")}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="sensitive">Données sensibles</label>
+              <label htmlFor="sensitive">{t("need.sensitive")}</label>
               <select
                 id="sensitive"
                 value={state.need.sensitive}
                 onChange={(e) => setState((prev) => updateNeed(prev, "sensitive", e.target.value))}
               >
-                <option>Non</option>
-                <option>Oui</option>
+                <option value="Non">{tOpt("Non")}</option>
+                <option value="Oui">{tOpt("Oui")}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="roles">Rôles / permissions</label>
+              <label htmlFor="roles">{t("need.roles")}</label>
               <select
                 id="roles"
                 value={state.need.roles}
                 onChange={(e) => setState((prev) => updateNeed(prev, "roles", e.target.value))}
               >
-                <option>1 rôle</option>
-                <option>2–3 rôles</option>
-                <option>4+ rôles</option>
+                <option value="1 rôle">{tOpt("1 rôle")}</option>
+                <option value="2–3 rôles">{tOpt("2–3 rôles")}</option>
+                <option value="4+ rôles">{tOpt("4+ rôles")}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="deliveryMode">Mode de delivery ADAI</label>
+              <label htmlFor="deliveryMode">{t("need.deliveryMode")}</label>
               <select
                 id="deliveryMode"
                 value={state.need.deliveryMode}
@@ -616,10 +615,10 @@ export default function CockpitBuilder({
                 <option>SAAS_ADAPT</option>
                 <option>STANDARD_DEPLOY</option>
               </select>
-              <div className="hint">Exemple : SAAS_ADAPT = socle existant, adaptation Front + Back limitée.</div>
+              <div className="hint">{t("need.deliveryModeHint")}</div>
             </div>
             <div className="field">
-              <label htmlFor="integrationCount">Intégrations externes estimées</label>
+              <label htmlFor="integrationCount">{t("need.integrationCount")}</label>
               <input
                 id="integrationCount"
                 type="number"
@@ -629,16 +628,16 @@ export default function CockpitBuilder({
               />
             </div>
             <div className="field">
-              <label htmlFor="volume">Volumétrie</label>
+              <label htmlFor="volume">{t("need.volume")}</label>
               <select
                 id="volume"
                 value={state.need.volume}
                 onChange={(e) => setState((prev) => updateNeed(prev, "volume", e.target.value))}
               >
-                <option>Faible</option>
-                <option>Moyenne</option>
-                <option>Élevée</option>
-                <option>Très élevée</option>
+                <option value="Faible">{tOpt("Faible")}</option>
+                <option value="Moyenne">{tOpt("Moyenne")}</option>
+                <option value="Élevée">{tOpt("Élevée")}</option>
+                <option value="Très élevée">{tOpt("Très élevée")}</option>
               </select>
             </div>
           </div>
@@ -653,14 +652,14 @@ export default function CockpitBuilder({
         <div>
           <div className="sectionHeader">
             <div>
-              <h2>05 — Prix & delivery</h2>
-              <p>Le prix commercial vient du périmètre. Le delivery sert à contrôler le coût interne, pas à fixer mécaniquement la valeur client.</p>
+              <h2>{t("pricing.title")}</h2>
+              <p>{t("pricing.desc")}</p>
             </div>
           </div>
           <div className="card formCard">
             <div className="formGrid">
               <div className="field">
-                <label htmlFor="discountRate">Bonus / remise commerciale</label>
+                <label htmlFor="discountRate">{t("pricing.discountRate")}</label>
                 <select
                   id="discountRate"
                   value={state.pricing.discountRate}
@@ -674,7 +673,7 @@ export default function CockpitBuilder({
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="productiveDays">Jours productifs / mois</label>
+                <label htmlFor="productiveDays">{t("pricing.productiveDays")}</label>
                 <input
                   id="productiveDays"
                   type="number"
@@ -684,46 +683,44 @@ export default function CockpitBuilder({
                 />
               </div>
               <div className="field">
-                <label htmlFor="deliveryConfidence">Confiance delivery</label>
+                <label htmlFor="deliveryConfidence">{t("pricing.deliveryConfidence")}</label>
                 <select
                   id="deliveryConfidence"
                   value={state.pricing.deliveryConfidence}
                   onChange={(e) => setState((prev) => updatePricing(prev, "deliveryConfidence", e.target.value))}
                 >
-                  <option>Faible</option>
-                  <option>Moyenne</option>
-                  <option>Haute</option>
+                  <option value="Faible">{tOpt("Faible")}</option>
+                  <option value="Moyenne">{tOpt("Moyenne")}</option>
+                  <option value="Haute">{tOpt("Haute")}</option>
                 </select>
               </div>
             </div>
             <div className="divider" />
             <div className="metricGrid">
-              <div className="metric"><span>Valeur modules</span><b>{euro(result.functionalValue)}</b></div>
-              <div className="metric"><span>Ajustement complexité</span><b>{result.complexityAdjustment ? `+${euro(result.complexityAdjustment)}` : euro(0)}</b></div>
-              <div className="metric"><span>Valeur catalogue</span><b>{euro(result.catalogValue)}</b></div>
-              <div className="metric"><span>Delivery estimé</span><b>{hasQualifiedScope ? `${result.estimatedDays} j` : "À estimer"}</b></div>
+              <div className="metric"><span>{t("pricing.metricModulesValue")}</span><b>{euro(result.functionalValue)}</b></div>
+              <div className="metric"><span>{t("pricing.metricComplexity")}</span><b>{result.complexityAdjustment ? `+${euro(result.complexityAdjustment)}` : euro(0)}</b></div>
+              <div className="metric"><span>{t("pricing.metricCatalogValue")}</span><b>{euro(result.catalogValue)}</b></div>
+              <div className="metric"><span>{t("pricing.metricDelivery")}</span><b>{hasQualifiedScope ? `${result.estimatedDays} ${t("units.day")}` : t("pricing.toBeEstimated")}</b></div>
             </div>
             <div className="divider" />
-            <div className="subtle">
-              Le prix commercial est calculé à partir de la valeur catalogue des modules sélectionnés, des ajustements de complexité et de la remise appliquée.
-            </div>
+            <div className="subtle">{t("pricing.note")}</div>
           </div>
         </div>
 
         <aside className="sticky">
           <div className="card summary">
             <div className="summaryTop">
-              <small>PROPOSITION ACTIVE</small>
+              <small>{t("pricing.summaryActive")}</small>
               <h2 style={{ margin: "6px 0 0" }}>{packs[result.forcedPack].label}</h2>
-              <div className="summaryPrice">{hasQualifiedScope ? euro(result.commercialPrice) : "À calculer"}</div>
-              <small>Valeur catalogue après remise autorisée.</small>
+              <div className="summaryPrice">{hasQualifiedScope ? euro(result.commercialPrice) : t("pricing.toBeCalculated")}</div>
+              <small>{t("pricing.summaryHint")}</small>
             </div>
-            <div className="row"><span>Socle pack</span><b>{euro(packs[result.forcedPack].base)}</b></div>
-            <div className="row"><span>Valeur catalogue</span><b>{euro(result.catalogValue)}</b></div>
-            <div className="row"><span>Remise</span><b>{Math.round(state.pricing.discountRate * 100)} %</b></div>
-            <div className="row"><span>Maintenance</span><b>{euro(result.maintenanceYear1Monthly)}/mois</b></div>
-            <div className="row"><span>Année 1</span><b>{euro(result.year1Revenue)}</b></div>
-            <div className="row"><span>Statut marge</span><b>{!hasQualifiedScope ? <span className="badge amber">EN ATTENTE</span> : result.gate ? <span className="badge green">MARGE VALIDÉE</span> : <span className="badge red">À REVOIR</span>}</b></div>
+            <div className="row"><span>{t("pricing.rowPackBase")}</span><b>{euro(packs[result.forcedPack].base)}</b></div>
+            <div className="row"><span>{t("pricing.rowCatalogValue")}</span><b>{euro(result.catalogValue)}</b></div>
+            <div className="row"><span>{t("pricing.rowDiscount")}</span><b>{Math.round(state.pricing.discountRate * 100)} %</b></div>
+            <div className="row"><span>{t("pricing.rowMaintenance")}</span><b>{euro(result.maintenanceYear1Monthly)}{t("units.perMonth")}</b></div>
+            <div className="row"><span>{t("pricing.rowYear1")}</span><b>{euro(result.year1Revenue)}</b></div>
+            <div className="row"><span>{t("pricing.rowMarginStatus")}</span><b>{!hasQualifiedScope ? <span className="badge amber">{t("pricing.badgePending")}</span> : result.gate ? <span className="badge green">{t("pricing.badgeValidated")}</span> : <span className="badge red">{t("pricing.badgeToReview")}</span>}</b></div>
           </div>
         </aside>
       </section>
@@ -816,16 +813,16 @@ export default function CockpitBuilder({
       <section id="roi-client" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>06 — ROI client</h2>
-            <p>La simulation complète est réservée à la revue avec le client. ADAI calibre les hypothèses avant exposition.</p>
+            <h2>{t("roiClient.title")}</h2>
+            <p>{t("roiClient.desc")}</p>
           </div>
-          <span className="badge amber">REVUE CLIENT</span>
+          <span className="badge amber">{t("roiClient.reviewBadge")}</span>
         </div>
         <div className="roiClient">
           <div className="toggleLine">
             <div>
-              <label htmlFor="roiValidated"><b>Hypothèses ROI validées par ADAI</b></label>
-              <div className="hint">Activer uniquement lorsque les hypothèses sont plausibles et discutées en revue.</div>
+              <label htmlFor="roiValidated"><b>{t("roiClient.validatedLabel")}</b></label>
+              <div className="hint">{t("roiClient.validatedHint")}</div>
             </div>
             <input
               id="roiValidated"
@@ -837,18 +834,18 @@ export default function CockpitBuilder({
           <div className="roiGrid">
             {(
               [
-                ["weeklyHours", "Heures hebdomadaires répétitives / collaborateur", 0, 0.5],
-                ["roiPeople", "Collaborateurs concernés", 1, 1],
-                ["hourlyCost", "Coût horaire chargé (€)", 0, 1],
-                ["automationRate", "Taux d'automatisation validé", 0, 1],
-                ["realizationRate", "Taux de réalisation économique", 0, 1],
-                ["errorsAvoided", "Erreurs évitées / an", 0, 1],
-                ["errorCost", "Coût moyen par erreur (€)", 0, 1],
-                ["toolSavings", "Économies outils / an (€)", 0, 1],
-                ["additionalRevenue", "CA additionnel estimé / an (€)", 0, 1],
-                ["contributionMargin", "Taux de marge contributive", 0, 1],
-                ["fteHours", "Référence heures / ETP / an", 1, 1],
-                ["activeWeeks", "Semaines actives", 1, 1],
+                ["weeklyHours", t("roiClient.weeklyHours"), 0, 0.5],
+                ["roiPeople", t("roiClient.roiPeople"), 1, 1],
+                ["hourlyCost", t("roiClient.hourlyCost"), 0, 1],
+                ["automationRate", t("roiClient.automationRate"), 0, 1],
+                ["realizationRate", t("roiClient.realizationRate"), 0, 1],
+                ["errorsAvoided", t("roiClient.errorsAvoided"), 0, 1],
+                ["errorCost", t("roiClient.errorCost"), 0, 1],
+                ["toolSavings", t("roiClient.toolSavings"), 0, 1],
+                ["additionalRevenue", t("roiClient.additionalRevenue"), 0, 1],
+                ["contributionMargin", t("roiClient.contributionMargin"), 0, 1],
+                ["fteHours", t("roiClient.fteHours"), 1, 1],
+                ["activeWeeks", t("roiClient.activeWeeks"), 1, 1],
               ] as [keyof BuilderState["roiClient"], string, number, number][]
             ).map(([key, label, min, step]) => (
               <div className="field" key={key}>
@@ -871,20 +868,20 @@ export default function CockpitBuilder({
           {state.roiClient.roiValidated ? (
             <div id="roiUnlocked">
               <div className="metricGrid">
-                <div className="metric"><span>Heures récupérables</span><b>{Math.round(result.hoursSaved).toLocaleString("fr-FR")} h/an</b></div>
-                <div className="metric"><span>Valeur brute du temps</span><b>{euro(result.grossTimeValue)}/an</b></div>
-                <div className="metric"><span>Valeur économique réalisée</span><b>{euro(result.realizedAnnualValue)}/an</b></div>
-                <div className="metric"><span>Équivalent temps plein</span><b>{(Math.round(result.fteEquivalent * 10) / 10).toLocaleString("fr-FR")} ETP</b></div>
+                <div className="metric"><span>{t("roiClient.hoursSaved")}</span><b>{Math.round(result.hoursSaved).toLocaleString("fr-FR")} {t("units.hoursPerYear")}</b></div>
+                <div className="metric"><span>{t("roiClient.grossTimeValue")}</span><b>{euro(result.grossTimeValue)}{t("units.perYear")}</b></div>
+                <div className="metric"><span>{t("roiClient.realizedValue")}</span><b>{euro(result.realizedAnnualValue)}{t("units.perYear")}</b></div>
+                <div className="metric"><span>{t("roiClient.fteEquivalent")}</span><b>{(Math.round(result.fteEquivalent * 10) / 10).toLocaleString("fr-FR")} {t("units.fte")}</b></div>
               </div>
               <div className="metricGrid">
-                <div className="metric"><span>Investissement année 1</span><b>{euro(result.clientInvestment)}</b></div>
-                <div className="metric"><span>Gain net année 1</span><b>{euro(result.clientNetGain)}</b></div>
-                <div className="metric"><span>ROI client</span><b>{pct(result.clientRoiPercent)}</b></div>
-                <div className="metric"><span>Payback</span><b>{(Math.round(result.paybackMonths * 10) / 10).toLocaleString("fr-FR")} mois</b></div>
+                <div className="metric"><span>{t("roiClient.investment")}</span><b>{euro(result.clientInvestment)}</b></div>
+                <div className="metric"><span>{t("roiClient.netGain")}</span><b>{euro(result.clientNetGain)}</b></div>
+                <div className="metric"><span>{t("roiClient.roi")}</span><b>{pct(result.clientRoiPercent)}</b></div>
+                <div className="metric"><span>{t("roiClient.payback")}</span><b>{(Math.round(result.paybackMonths * 10) / 10).toLocaleString("fr-FR")} {t("units.month")}</b></div>
               </div>
             </div>
           ) : (
-            <div className="roiLocked">🔒 Simulation masquée : valider les hypothèses ADAI pour afficher le ROI au client.</div>
+            <div className="roiLocked">{t("roiClient.locked")}</div>
           )}
         </div>
       </section>
@@ -898,22 +895,22 @@ export default function CockpitBuilder({
       <section id="cockpit" className="section">
         <div className="sectionHeader">
           <div>
-            <h2>07 — Cockpit & export</h2>
-            <p>Synthèse exploitable par Victor : données Front, moteur Back, proposition commerciale, rentabilité et ROI.</p>
+            <h2>{t("cockpit.title")}</h2>
+            <p>{t("cockpit.desc")}</p>
           </div>
         </div>
         <div className="twoCol">
           <div className="card formCard">
-            <h3 style={{ marginTop: 0 }}>Lecture Cockpit</h3>
-            <div className="row"><span>Entreprise</span><b>{state.client.companyName} — {state.client.industry}</b></div>
-            <div className="row"><span>Pack recommandé / actif</span><b>{packs[result.forcedPack].label}</b></div>
-            <div className="row"><span>Domaines concernés</span><b>{result.activeDomainNames.length}</b></div>
-            <div className="row"><span>Modules retenus</span><b>{result.selectedIds.length}</b></div>
-            <div className="row"><span>Prix catalogue</span><b>{euro(result.catalogValue)}</b></div>
-            <div className="row"><span>Prix commercial</span><b>{hasQualifiedScope ? euro(result.commercialPrice) : "À calculer"}</b></div>
-            <div className="row"><span>Delivery</span><b>{hasQualifiedScope ? `${result.estimatedDays} j — ${state.need.deliveryMode}` : "À estimer"}</b></div>
-            <div className="row"><span>ROI ADAI</span><b>{hasQualifiedScope ? `${result.gate ? "GO" : "À REVOIR"} — markup ${pct(result.markupPercent)}` : "En attente"}</b></div>
-            <div className="row"><span>ROI client</span><b>{!hasQualifiedScope ? "À valider" : state.roiClient.roiValidated ? `${pct(result.clientRoiPercent)} — payback ${(Math.round(result.paybackMonths * 10) / 10)} mois` : "À valider en revue"}</b></div>
+            <h3 style={{ marginTop: 0 }}>{t("cockpit.readTitle")}</h3>
+            <div className="row"><span>{t("cockpit.rowCompany")}</span><b>{state.client.companyName} — {state.client.industry}</b></div>
+            <div className="row"><span>{t("cockpit.rowRecommendedPack")}</span><b>{packs[result.forcedPack].label}</b></div>
+            <div className="row"><span>{t("cockpit.rowDomains")}</span><b>{result.activeDomainNames.length}</b></div>
+            <div className="row"><span>{t("cockpit.rowModules")}</span><b>{result.selectedIds.length}</b></div>
+            <div className="row"><span>{t("cockpit.rowCatalogPrice")}</span><b>{euro(result.catalogValue)}</b></div>
+            <div className="row"><span>{t("cockpit.rowCommercialPrice")}</span><b>{hasQualifiedScope ? euro(result.commercialPrice) : t("pricing.toBeCalculated")}</b></div>
+            <div className="row"><span>{t("cockpit.rowDelivery")}</span><b>{hasQualifiedScope ? `${result.estimatedDays} ${t("units.day")} — ${state.need.deliveryMode}` : t("pricing.toBeEstimated")}</b></div>
+            <div className="row"><span>{t("cockpit.rowRoiAdai")}</span><b>{hasQualifiedScope ? `${result.gate ? "GO" : t("cockpit.toReview")} — markup ${pct(result.markupPercent)}` : t("cockpit.rowRoiAdaiPending")}</b></div>
+            <div className="row"><span>{t("cockpit.rowRoiClient")}</span><b>{!hasQualifiedScope ? t("cockpit.rowRoiClientToValidate") : state.roiClient.roiValidated ? `${pct(result.clientRoiPercent)} — payback ${(Math.round(result.paybackMonths * 10) / 10)} ${t("units.month")}` : t("cockpit.rowRoiClientToValidateReview")}</b></div>
             <div className="divider" />
             <div className="pillList">
               {result.selectedIds.map((id) => {
@@ -923,7 +920,7 @@ export default function CockpitBuilder({
             </div>
           </div>
           <div className="card formCard">
-            <h3 style={{ marginTop: 0 }}>Export JSON</h3>
+            <h3 style={{ marginTop: 0 }}>{t("cockpit.exportTitle")}</h3>
             <textarea className="jsonBox" readOnly value={json} />
             <div className="ctaRow" style={{ marginTop: 12 }}>
               <button
@@ -931,13 +928,13 @@ export default function CockpitBuilder({
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(json);
-                    alert("JSON copié.");
+                    alert(t("cockpit.copyDone"));
                   } catch {
                     // fallback not needed in modern browsers
                   }
                 }}
               >
-                Copier JSON
+                {t("cockpit.copyJson")}
               </button>
               <button
                 className="cta copper"
@@ -950,20 +947,20 @@ export default function CockpitBuilder({
                   URL.revokeObjectURL(a.href);
                 }}
               >
-                Télécharger JSON
+                {t("cockpit.downloadJson")}
               </button>
               <button
                 className="cta secondary"
                 onClick={() => {
                   try {
                     localStorage.setItem(`ADAI_V6_${state.client.projectName || "projet"}`, json);
-                    alert("Demande client sauvegardée localement.");
+                    alert(t("cockpit.saveDone"));
                   } catch {
-                    alert("Erreur de sauvegarde.");
+                    alert(t("cockpit.saveError"));
                   }
                 }}
               >
-                Sauvegarder demande client
+                {t("cockpit.saveLocal")}
               </button>
               <button
                 className="cta primary"
@@ -992,21 +989,21 @@ export default function CockpitBuilder({
                 }}
               >
                 {submitStatus === "sending"
-                  ? "Envoi..."
+                  ? t("cockpit.submitSending")
                   : submitStatus === "sent"
-                    ? "Envoyée ✓"
+                    ? t("cockpit.submitSent")
                     : submitStatus === "error"
-                      ? "Erreur — réessayer"
-                      : "Envoyer à ADAI"}
+                      ? t("cockpit.submitError")
+                      : t("cockpit.submitIdle")}
               </button>
               <button
                 className="cta secondary"
                 onClick={() => window.print()}
               >
-                Imprimer demande client / PDF
+                {t("cockpit.printPdf")}
               </button>
               <button className="cta secondary" onClick={() => setState(resetBuilderState())}>
-                Réinitialiser
+                {t("cockpit.resetBtn")}
               </button>
             </div>
           </div>
