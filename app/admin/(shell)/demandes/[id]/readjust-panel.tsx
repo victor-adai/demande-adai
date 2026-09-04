@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PACKS, defaultCatalogDomains, type CatalogDomain, type Pack, type PackKey } from "@/lib/data";
 import { calculate } from "@/lib/engine";
 import type { BuilderState, ClientProfile, NeedProfile, PricingParams, RoiAdaiParams, RoiClientParams } from "@/lib/types";
@@ -48,6 +49,7 @@ export default function ReadjustPanel({
   publicUrl,
 }: Props) {
   const router = useRouter();
+  const t = useTranslations("AdminReadjust");
   const [pack, setPack] = useState<PackKey>(initialPack);
   const [modules, setModules] = useState<Set<string>>(new Set(initialModules));
   const [discountRate, setDiscountRate] = useState(initialDiscountRate);
@@ -55,6 +57,7 @@ export default function ReadjustPanel({
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [gateBlocked, setGateBlocked] = useState(false);
 
   // CURRENT vs PREVIEW fix (P1) : le preview reprend l'état RÉEL de la demande
   // (client/need/roiAdai/pricing/roiClient) et n'y superpose que les champs en
@@ -105,16 +108,17 @@ export default function ReadjustPanel({
     });
     setSaving(false);
     if (res.ok) {
-      setMessage("Réajustement enregistré et recalculé par le moteur V6.");
+      setMessage(t("saveSuccess"));
       router.refresh();
     } else {
-      setMessage("Erreur lors de l'enregistrement.");
+      setMessage(t("saveError"));
     }
   }
 
   async function handlePublish(force = false) {
     setPublishing(true);
     setMessage(null);
+    setGateBlocked(false);
     const res = await fetch(`/api/demandes/${demandeId}/publish`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -123,23 +127,26 @@ export default function ReadjustPanel({
     setPublishing(false);
     if (res.status === 409) {
       const body = await res.json();
-      setMessage(
-        body.error === "GATE_FAILED" ? `${body.message} Publier quand même ?` : body.message
-      );
+      if (body.error === "GATE_FAILED") {
+        setGateBlocked(true);
+        setMessage(`${body.message} ${t("publishAnyway")}`);
+      } else {
+        setMessage(body.message);
+      }
       return;
     }
     if (res.ok) {
-      setMessage("Offre publiée.");
+      setMessage(t("publishSuccess"));
       router.refresh();
     } else {
-      setMessage("Erreur lors de la publication.");
+      setMessage(t("publishError"));
     }
   }
 
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Pack</span>
+        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("pack")}</span>
         <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
           {(["start", "grow", "scale"] as PackKey[]).map((p) => (
             <button
@@ -154,18 +161,18 @@ export default function ReadjustPanel({
             </button>
           ))}
         </div>
-        <div className="admin-field-row"><span>Pack sélectionné</span><span>{pack.toUpperCase()}</span></div>
-        <div className="admin-field-row"><span>Pack minimum requis</span><span>{preview.forcedPack.toUpperCase()}</span></div>
+        <div className="admin-field-row"><span>{t("packSelectionne")}</span><span>{pack.toUpperCase()}</span></div>
+        <div className="admin-field-row"><span>{t("packMinimumRequis")}</span><span>{preview.forcedPack.toUpperCase()}</span></div>
         {isPackBelowMinimum && (
           <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 4 }}>
-            Cette configuration nécessite le pack {preview.forcedPack.toUpperCase()}.
+            {t("packWarning", { pack: preview.forcedPack.toUpperCase() })}
           </p>
         )}
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <label htmlFor="discountRate" style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-          Remise
+          {t("remise")}
         </label>
         <input
           id="discountRate"
@@ -177,11 +184,11 @@ export default function ReadjustPanel({
           onChange={(e) => setDiscountRate(Number(e.target.value))}
           style={{ width: "100%" }}
         />
-        <div className="admin-field-row"><span>Remise appliquée</span><span>{pct(discountRate * 100)}</span></div>
-        <div className="admin-field-row"><span>Remise maximale autorisée</span><span>{pct(preview.maxDiscountRate)}</span></div>
+        <div className="admin-field-row"><span>{t("remiseAppliquee")}</span><span>{pct(discountRate * 100)}</span></div>
+        <div className="admin-field-row"><span>{t("remiseMaximale")}</span><span>{pct(preview.maxDiscountRate)}</span></div>
         {isDiscountAboveMax && (
           <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 4 }}>
-            Remise au-dessus du maximum autorisé par le moteur V6 ({pct(preview.maxDiscountRate)}).
+            {t("remiseWarning", { max: pct(preview.maxDiscountRate) })}
           </p>
         )}
       </div>
@@ -189,13 +196,13 @@ export default function ReadjustPanel({
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
           <input type="checkbox" checked={roiValidated} onChange={(e) => setRoiValidated(e.target.checked)} />
-          Hypothèses ROI client validées
+          {t("hypothesesValidees")}
         </label>
       </div>
 
       <details style={{ marginBottom: 16 }}>
         <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--text-secondary)" }}>
-          Modules ({modules.size} sélectionné{modules.size > 1 ? "s" : ""})
+          {t("modulesCount", { count: modules.size, plural: modules.size > 1 ? "s" : "" })}
         </summary>
         <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 10 }}>
           {domains.map((domain) => (
@@ -232,38 +239,38 @@ export default function ReadjustPanel({
       </details>
 
       <div className="admin-card" style={{ padding: 12, marginBottom: 16 }}>
-        <h2 style={{ fontSize: 12 }}>Impact (aperçu, moteur V6)</h2>
-        <div className="admin-field-row"><span>Catalogue</span><span>{euro(preview.catalogValue)}</span></div>
-        <div className="admin-field-row"><span>Commercial</span><span>{euro(preview.commercialPrice)}</span></div>
-        <div className="admin-field-row"><span>Maintenance an 1</span><span>{euro(preview.maintenanceYear1Monthly)}/mois</span></div>
-        <div className="admin-field-row"><span>Délai</span><span>{preview.estimatedDays} j</span></div>
-        <div className="admin-field-row"><span>Gate</span><span>{preview.gate ? "GO" : "NO-GO"}</span></div>
+        <h2 style={{ fontSize: 12 }}>{t("impactTitle")}</h2>
+        <div className="admin-field-row"><span>{t("catalogue")}</span><span>{euro(preview.catalogValue)}</span></div>
+        <div className="admin-field-row"><span>{t("commercial")}</span><span>{euro(preview.commercialPrice)}</span></div>
+        <div className="admin-field-row"><span>{t("maintenanceAn1")}</span><span>{euro(preview.maintenanceYear1Monthly)}/mois</span></div>
+        <div className="admin-field-row"><span>{t("delai")}</span><span>{preview.estimatedDays} j</span></div>
+        <div className="admin-field-row"><span>{t("gate")}</span><span>{preview.gate ? "GO" : "NO-GO"}</span></div>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button className="admin-btn" onClick={handleSave} disabled={saving}>
-          {saving ? "Enregistrement..." : "Recalculer & enregistrer"}
+          {saving ? t("saving") : t("save")}
         </button>
         <button
           className="admin-btn secondary"
-          onClick={() => handlePublish(message?.includes("quand même") ?? false)}
+          onClick={() => handlePublish(gateBlocked)}
           disabled={publishing || status === "accepted" || publishBlockedByGuard}
-          title={publishBlockedByGuard ? "Configuration incohérente : corrigez le pack ou la remise avant de publier." : undefined}
+          title={publishBlockedByGuard ? t("publishBlockedTitle") : undefined}
         >
-          {status === "accepted" ? "Déjà publiée" : publishing ? "Publication..." : "Publier l'offre"}
+          {status === "accepted" ? t("alreadyPublished") : publishing ? t("publishing") : t("publish")}
         </button>
       </div>
 
       {publishBlockedByGuard && (
         <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}>
-          Publication bloquée : la configuration doit être cohérente (pack et remise) avant publication.
+          {t("publishBlocked")}
         </p>
       )}
-      {!gate && <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}>Gate ROI ADAI actuellement NO-GO.</p>}
+      {!gate && <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}>{t("gateNoGo")}</p>}
       {message && <p style={{ fontSize: 13, marginTop: 10, color: "var(--text-secondary)" }}>{message}</p>}
       {publicUrl && (
         <p style={{ fontSize: 13, marginTop: 10 }}>
-          Offre publique : <code>{publicUrl}</code>
+          {t("publicOffer")} <code>{publicUrl}</code>
         </p>
       )}
     </div>

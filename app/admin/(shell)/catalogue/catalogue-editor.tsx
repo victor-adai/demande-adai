@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { CatalogDomain, Pack, PackKey } from "@/lib/data";
 
 type ModuleRow = { moduleId: string; name: string; build: number; maint: number; active: boolean };
@@ -33,6 +34,7 @@ export default function CatalogueEditor({
   initialPacks: Record<PackKey, Pack>;
 }) {
   const router = useRouter();
+  const t = useTranslations("AdminCatalogue");
   const [domains, setDomains] = useState(initialDomains);
   const [moduleRows, setModuleRows] = useState<Map<string, ModuleRow>>(() => toModuleRows(initialDomains));
   const [packs, setPacks] = useState(initialPacks);
@@ -110,10 +112,10 @@ export default function CatalogueEditor({
       setModuleRows(toModuleRows(updated.domains));
       setPacks(updated.packs);
       setPackRows(toPackRows(updated.packs));
-      setMessage("Catalogue enregistré et pris en compte immédiatement par le moteur V6.");
+      setMessage(t("saveSuccess"));
       router.refresh();
     } else {
-      setMessage("Erreur lors de l'enregistrement du catalogue.");
+      setMessage(t("saveError"));
     }
   }
 
@@ -121,26 +123,23 @@ export default function CatalogueEditor({
     <div>
       <div className="admin-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0 }}>Catalogue</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-muted)" }}>
-            Prix de base, maintenance et modules modifiables. Les identifiants techniques, le libellé des packs et les
-            règles moteur (delivery, forcing, ROI) restent figés.
-          </p>
+          <h2 style={{ margin: 0 }}>{t("title")}</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--text-muted)" }}>{t("intro")}</p>
         </div>
         <button className="admin-btn" onClick={handleSave} disabled={saving || dirtyCount === 0}>
-          {saving ? "Enregistrement..." : dirtyCount > 0 ? `Enregistrer (${dirtyCount})` : "Enregistrer"}
+          {saving ? t("saving") : dirtyCount > 0 ? t("saveWithCount", { count: dirtyCount }) : t("save")}
         </button>
       </div>
       {message && <p style={{ fontSize: 13, margin: "0 0 16px", color: "var(--text-secondary)" }}>{message}</p>}
 
       <div className="admin-card">
-        <h2>Packs</h2>
+        <h2>{t("packsTitle")}</h2>
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Pack</th>
-              <th>Prix de base (€)</th>
-              <th>Maintenance (€/mois)</th>
+              <th>{t("colPack")}</th>
+              <th>{t("colPrixBase")}</th>
+              <th>{t("colMaintenance")}</th>
             </tr>
           </thead>
           <tbody>
@@ -186,11 +185,11 @@ export default function CatalogueEditor({
           <table className="admin-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Libellé</th>
-                <th>Build (€)</th>
-                <th>Maintenance (€/mois)</th>
-                <th>Actif</th>
+                <th>{t("colId")}</th>
+                <th>{t("colLibelle")}</th>
+                <th>{t("colBuild")}</th>
+                <th>{t("colMaintenance")}</th>
+                <th>{t("colActif")}</th>
               </tr>
             </thead>
             <tbody>

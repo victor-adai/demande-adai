@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import ReadjustPanel from "@/app/admin/(shell)/demandes/[id]/readjust-panel";
 import type { ClientProfile, NeedProfile, PricingParams, RoiAdaiParams, RoiClientParams } from "@/lib/types";
+import messages from "@/messages/fr.json";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -79,21 +81,23 @@ function renderPanel(
   overrides: { client?: Partial<ClientProfile>; need?: Partial<NeedProfile>; initialModules?: string[] } = {}
 ) {
   render(
-    <ReadjustPanel
-      demandeId="x"
-      client={{ ...BASE_CLIENT, ...overrides.client }}
-      need={{ ...BASE_NEED, ...overrides.need }}
-      roiAdai={BASE_ROI_ADAI}
-      pricing={BASE_PRICING}
-      roiClient={BASE_ROI_CLIENT}
-      initialPack="start"
-      initialModules={overrides.initialModules ?? []}
-      initialDiscountRate={0}
-      initialRoiValidated={false}
-      gate={true}
-      status="submitted"
-      publicUrl={null}
-    />
+    <NextIntlClientProvider locale="fr" messages={messages}>
+      <ReadjustPanel
+        demandeId="x"
+        client={{ ...BASE_CLIENT, ...overrides.client }}
+        need={{ ...BASE_NEED, ...overrides.need }}
+        roiAdai={BASE_ROI_ADAI}
+        pricing={BASE_PRICING}
+        roiClient={BASE_ROI_CLIENT}
+        initialPack="start"
+        initialModules={overrides.initialModules ?? []}
+        initialDiscountRate={0}
+        initialRoiValidated={false}
+        gate={true}
+        status="submitted"
+        publicUrl={null}
+      />
+    </NextIntlClientProvider>
   );
 }
 

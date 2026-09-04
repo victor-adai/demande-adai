@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-
-const NAV_ITEMS = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: "fa-table-cells-large" },
-  { href: "/admin/demandes", label: "Demandes", icon: "fa-inbox" },
-  { href: "/admin/catalogue", label: "Catalogue", icon: "fa-book" },
-  { href: "/admin/parametres", label: "Paramètres", icon: "fa-gear" },
-];
+import { useTranslations } from "next-intl";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const t = useTranslations("AdminNav");
+
+  const NAV_ITEMS = [
+    { href: "/admin/dashboard", label: t("dashboard"), icon: "fa-table-cells-large" },
+    { href: "/admin/demandes", label: t("demandes"), icon: "fa-inbox" },
+    { href: "/admin/catalogue", label: t("catalogue"), icon: "fa-book" },
+    { href: "/admin/parametres", label: t("parametres"), icon: "fa-gear" },
+  ];
 
   return (
     <aside className="admin-sidebar">
@@ -37,7 +39,7 @@ export default function AdminSidebar() {
         <span className="admin-email">{session?.user?.email ?? ""}</span>
         <button className="admin-logout" onClick={() => signOut({ callbackUrl: "/admin/login" })}>
           <i className="fa-solid fa-arrow-right-from-bracket" aria-hidden="true" />
-          Déconnexion
+          {t("logout")}
         </button>
       </div>
     </aside>

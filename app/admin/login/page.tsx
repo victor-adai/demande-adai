@@ -3,9 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const t = useTranslations("AdminLogin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +28,7 @@ export default function AdminLoginPage() {
     setLoading(false);
 
     if (res?.error) {
-      setError("Identifiants invalides.");
+      setError(t("invalidCredentials"));
       return;
     }
 
@@ -45,39 +47,36 @@ export default function AdminLoginPage() {
         <div className="login-center">
           <div className="login-badge">
             <span className="dot" />
-            Espace interne ADAI
+            {t("badge")}
           </div>
 
           <div className="login-logo-big">ΛDΛI</div>
 
           <h1 className="login-headline">
-            Qualifier. Configurer.
+            {t("headlineLine1")}
             <br />
-            <em>Rentabiliser.</em>
+            <em>{t("headlineLine2")}</em>
           </h1>
-          <p className="login-sub">
-            Le backoffice interne ADAI : pilotage des demandes, du catalogue et de la rentabilité du Cockpit
-            Builder V6.
-          </p>
+          <p className="login-sub">{t("sub")}</p>
 
           <div className="login-features">
             <div className="login-feature-card">
               <i className="fa-solid fa-table-cells-large" aria-hidden="true" />
-              <span>Dashboard</span>
+              <span>{t("featureDashboard")}</span>
             </div>
             <div className="login-feature-card">
               <i className="fa-solid fa-inbox" aria-hidden="true" />
-              <span>Demandes</span>
+              <span>{t("featureDemandes")}</span>
             </div>
             <div className="login-feature-card">
               <i className="fa-solid fa-book" aria-hidden="true" />
-              <span>Catalogue</span>
+              <span>{t("featureCatalogue")}</span>
             </div>
           </div>
         </div>
 
         <div className="login-bottom">
-          <span className="copyright">© 2026 ΛDΛI — THINK • BUILD • SCALE</span>
+          <span className="copyright">{t("copyright")}</span>
           <div className="login-dots">
             <span />
             <span />
@@ -91,13 +90,13 @@ export default function AdminLoginPage() {
           <div className="login-brand-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/adai-logo.png" alt="ΛDΛI" className="mark-box" />
-            <span>ΛDΛI Backoffice</span>
+            <span>{t("brand")}</span>
           </div>
-          <span className="login-brand-sub">Administration</span>
+          <span className="login-brand-sub">{t("administration")}</span>
 
           <div className="login-heading">
-            <h2>Connexion</h2>
-            <p>Bienvenue. Veuillez vous identifier pour continuer.</p>
+            <h2>{t("connexion")}</h2>
+            <p>{t("welcome")}</p>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -112,7 +111,7 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <label htmlFor="email">Adresse email admin</label>
+              <label htmlFor="email">{t("emailLabel")}</label>
             </div>
 
             <div className="field-wrap">
@@ -127,12 +126,12 @@ export default function AdminLoginPage() {
                 required
                 style={{ paddingRight: 42 }}
               />
-              <label htmlFor="password">Mot de passe</label>
+              <label htmlFor="password">{t("passwordLabel")}</label>
               <button
                 type="button"
                 className="toggle-pw"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
               >
                 <i className={showPassword ? "fa-regular fa-eye-slash" : "fa-regular fa-eye"} aria-hidden="true" />
               </button>
@@ -145,14 +144,14 @@ export default function AdminLoginPage() {
             )}
 
             <button type="submit" className="admin-btn login-submit" disabled={loading}>
-              <span>{loading ? "Connexion..." : "Se connecter"}</span>
+              <span>{loading ? t("connecting") : t("submit")}</span>
               {!loading && <i className="fa-solid fa-arrow-right" style={{ fontSize: 12 }} aria-hidden="true" />}
             </button>
           </form>
 
           <div className="login-security-note">
             <i className="fa-solid fa-shield-halved" aria-hidden="true" />
-            <span>Connexion sécurisée · Accès restreint aux administrateurs ADAI</span>
+            <span>{t("securityNote")}</span>
           </div>
         </div>
       </div>

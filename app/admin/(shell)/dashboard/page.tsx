@@ -1,14 +1,24 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { demandeToResult } from "@/lib/server/demandes";
 import { getCatalog } from "@/lib/server/catalog";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_KEYS: Record<string, string> = {
+  submitted: "statusSubmitted",
+  adjusted: "statusAdjusted",
+  accepted: "statusAccepted",
+  rejected: "statusRejected",
+};
+
 export default async function DashboardPage() {
-  const [demandes, catalog] = await Promise.all([
+  const [demandes, catalog, t, tStatus] = await Promise.all([
     prisma.demande.findMany({ orderBy: { createdAt: "desc" } }),
     getCatalog(),
+    getTranslations("AdminDashboard"),
+    getTranslations("AdminDemandesList"),
   ]);
 
   const total = demandes.length;
@@ -29,14 +39,11 @@ export default async function DashboardPage() {
       <>
         <div className="admin-metric-grid">
           <div className="admin-metric">
-            <div className="label">Demandes</div>
+            <div className="label">{t("demandes")}</div>
             <div className="value">0</div>
           </div>
         </div>
-        <div className="admin-empty">
-          Aucune demande enregistrée pour le moment. Les demandes soumises depuis le Cockpit Builder client
-          apparaîtront ici.
-        </div>
+        <div className="admin-empty">{t("empty")}</div>
         <QuickLinks />
       </>
     );
@@ -46,37 +53,37 @@ export default async function DashboardPage() {
     <>
       <div className="admin-metric-grid">
         <div className="admin-metric">
-          <div className="label">Demandes</div>
+          <div className="label">{t("demandes")}</div>
           <div className="value">{total}</div>
         </div>
         <div className="admin-metric">
-          <div className="label">À traiter</div>
+          <div className="label">{t("aTraiter")}</div>
           <div className="value">{aTraiter}</div>
         </div>
         <div className="admin-metric">
-          <div className="label">Acceptées</div>
+          <div className="label">{t("acceptees")}</div>
           <div className="value">{acceptees}</div>
         </div>
         <div className="admin-metric">
-          <div className="label">Valeur commerciale cumulée</div>
+          <div className="label">{t("valeurCommerciale")}</div>
           <div className="value">{Math.round(valeurCommerciale).toLocaleString("fr-FR")} €</div>
         </div>
       </div>
 
       <div className="admin-card">
-        <h2>Répartition par statut</h2>
+        <h2>{t("repartitionParStatut")}</h2>
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Statut</th>
-              <th>Nombre</th>
+              <th>{t("statut")}</th>
+              <th>{t("nombre")}</th>
             </tr>
           </thead>
           <tbody>
             {byStatus.map((s) => (
               <tr key={s.status}>
                 <td>
-                  <span className={`admin-badge ${s.status}`}>{s.status}</span>
+                  <span className={`admin-badge ${s.status}`}>{tStatus(STATUS_KEYS[s.status])}</span>
                 </td>
                 <td>{s.count}</td>
               </tr>
@@ -86,10 +93,8 @@ export default async function DashboardPage() {
       </div>
 
       <div className="admin-card">
-        <h2>Tendance</h2>
-        <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
-          Graphique d&apos;évolution — NON IMPLÉMENTÉ (aucune série temporelle agrégée disponible pour l&apos;instant).
-        </p>
+        <h2>{t("tendance")}</h2>
+        <p style={{ color: "var(--text-muted)", fontSize: 13 }}>{t("tendanceEmpty")}</p>
       </div>
 
       <QuickLinks />
@@ -97,19 +102,21 @@ export default async function DashboardPage() {
   );
 }
 
-function QuickLinks() {
+async function QuickLinks() {
+  const t = await getTranslations("AdminDashboard");
+  const tNav = await getTranslations("AdminNav");
   return (
     <div className="admin-card">
-      <h2>Accès rapide</h2>
+      <h2>{t("accesRapide")}</h2>
       <div style={{ display: "flex", gap: 12 }}>
         <Link className="admin-btn secondary" href="/admin/demandes">
-          Demandes
+          {tNav("demandes")}
         </Link>
         <Link className="admin-btn secondary" href="/admin/catalogue">
-          Catalogue
+          {tNav("catalogue")}
         </Link>
         <Link className="admin-btn secondary" href="/admin/parametres">
-          Paramètres
+          {tNav("parametres")}
         </Link>
       </div>
     </div>

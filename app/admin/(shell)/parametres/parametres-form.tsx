@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type RoiSettings = {
   resourcePool: number;
@@ -14,17 +15,18 @@ type RoiSettings = {
   productiveDays: number;
 };
 
-const FIELDS: { key: keyof RoiSettings; label: string }[] = [
-  { key: "resourcePool", label: "Pool de ressources (€/mois)" },
-  { key: "structureCost", label: "Coût de structure (€/mois)" },
-  { key: "directionCost", label: "Coût direction (€/mois)" },
-  { key: "externalCosts", label: "Coûts externes (€)" },
-  { key: "licenseCosts", label: "Coûts de licences (€)" },
-  { key: "otherCosts", label: "Autres coûts (€)" },
-  { key: "productiveDays", label: "Jours productifs / mois" },
+const FIELD_KEYS: { key: keyof RoiSettings; labelKey: string }[] = [
+  { key: "resourcePool", labelKey: "resourcePool" },
+  { key: "structureCost", labelKey: "structureCost" },
+  { key: "directionCost", labelKey: "directionCost" },
+  { key: "externalCosts", labelKey: "externalCosts" },
+  { key: "licenseCosts", labelKey: "licenseCosts" },
+  { key: "otherCosts", labelKey: "otherCosts" },
+  { key: "productiveDays", labelKey: "productiveDays" },
 ];
 
 export default function ParametresForm({ initial }: { initial: RoiSettings }) {
+  const t = useTranslations("AdminParametres");
   const [values, setValues] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -42,18 +44,18 @@ export default function ParametresForm({ initial }: { initial: RoiSettings }) {
       body: JSON.stringify(values),
     });
     setSaving(false);
-    setMessage(res.ok ? "Paramètres enregistrés." : "Erreur lors de l'enregistrement.");
+    setMessage(res.ok ? t("saveSuccess") : t("saveError"));
   }
 
   return (
     <div className="admin-card" style={{ maxWidth: 480 }}>
-      <span className="admin-confidential">Confidentiel · Interne ADAI</span>
-      <h2>Paramètres ROI ADAI</h2>
+      <span className="admin-confidential">{t("confidentiel")}</span>
+      <h2>{t("title")}</h2>
 
-      {FIELDS.map((f) => (
+      {FIELD_KEYS.map((f) => (
         <div key={f.key} style={{ marginBottom: 14 }}>
           <label htmlFor={f.key} style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-            {f.label}
+            {t(f.labelKey)}
           </label>
           <input
             id={f.key}
@@ -67,7 +69,7 @@ export default function ParametresForm({ initial }: { initial: RoiSettings }) {
 
       <div style={{ marginBottom: 14 }}>
         <label htmlFor="minMarkup" style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-          Markup minimum ({Math.round(values.minMarkup * 100)} %)
+          {t("minMarkup", { pct: Math.round(values.minMarkup * 100) })}
         </label>
         <input
           id="minMarkup"
@@ -81,7 +83,7 @@ export default function ParametresForm({ initial }: { initial: RoiSettings }) {
 
       <div style={{ marginBottom: 20 }}>
         <label htmlFor="allocationMode" style={{ fontSize: 13, color: "var(--text-muted)", display: "block", marginBottom: 6 }}>
-          Mode d&apos;allocation
+          {t("allocationMode")}
         </label>
         <select
           id="allocationMode"
@@ -89,13 +91,13 @@ export default function ParametresForm({ initial }: { initial: RoiSettings }) {
           value={values.allocationMode}
           onChange={(e) => update("allocationMode", e.target.value as "daily" | "monthly")}
         >
-          <option value="daily">Journalier</option>
-          <option value="monthly">Mensuel</option>
+          <option value="daily">{t("daily")}</option>
+          <option value="monthly">{t("monthly")}</option>
         </select>
       </div>
 
       <button className="admin-btn" onClick={handleSave} disabled={saving}>
-        {saving ? "Enregistrement..." : "Enregistrer"}
+        {saving ? t("saving") : t("save")}
       </button>
       {message && <p style={{ fontSize: 13, marginTop: 10, color: "var(--text-secondary)" }}>{message}</p>}
     </div>

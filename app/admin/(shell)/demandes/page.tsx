@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { listDemandes, type DemandeStatus } from "@/lib/server/demandes";
 import { getCatalog } from "@/lib/server/catalog";
 
 export const dynamic = "force-dynamic";
 
 const STATUSES: DemandeStatus[] = ["submitted", "adjusted", "accepted", "rejected"];
+
+const STATUS_KEYS: Record<DemandeStatus, string> = {
+  submitted: "statusSubmitted",
+  adjusted: "statusAdjusted",
+  accepted: "statusAccepted",
+  rejected: "statusRejected",
+};
 
 export default async function DemandesListPage({
   searchParams,
@@ -16,6 +24,7 @@ export default async function DemandesListPage({
     : undefined;
   const page = searchParams.page ? Number(searchParams.page) : 1;
 
+  const t = await getTranslations("AdminDemandesList");
   const catalog = await getCatalog();
   const { items, total, pageSize } = await listDemandes(
     {
@@ -36,38 +45,38 @@ export default async function DemandesListPage({
           className="admin-input"
           type="search"
           name="search"
-          placeholder="Rechercher une entreprise ou un projet..."
+          placeholder={t("searchPlaceholder")}
           defaultValue={searchParams.search ?? ""}
           style={{ maxWidth: 320 }}
           suppressHydrationWarning
         />
         <select className="admin-select" name="status" defaultValue={searchParams.status ?? ""} style={{ maxWidth: 200 }}>
-          <option value="">Tous les statuts</option>
+          <option value="">{t("allStatuses")}</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {t(STATUS_KEYS[s])}
             </option>
           ))}
         </select>
         <button type="submit" className="admin-btn">
-          Filtrer
+          {t("filter")}
         </button>
       </form>
 
       {items.length === 0 ? (
-        <div className="admin-empty">Aucune demande ne correspond à ces critères.</div>
+        <div className="admin-empty">{t("empty")}</div>
       ) : (
         <>
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Entreprise</th>
-                <th>Projet</th>
-                <th>Pack</th>
-                <th>Prix commercial</th>
-                <th>Statut</th>
-                <th>Date</th>
-                <th>Action</th>
+                <th>{t("colEntreprise")}</th>
+                <th>{t("colProjet")}</th>
+                <th>{t("colPack")}</th>
+                <th>{t("colPrixCommercial")}</th>
+                <th>{t("colStatut")}</th>
+                <th>{t("colDate")}</th>
+                <th>{t("colAction")}</th>
               </tr>
             </thead>
             <tbody>
@@ -78,12 +87,12 @@ export default async function DemandesListPage({
                   <td>{d.pack.toUpperCase()}</td>
                   <td>{Math.round(d.commercialPrice).toLocaleString("fr-FR")} €</td>
                   <td>
-                    <span className={`admin-badge ${d.status}`}>{d.status}</span>
+                    <span className={`admin-badge ${d.status}`}>{t(STATUS_KEYS[d.status as DemandeStatus])}</span>
                   </td>
                   <td>{new Date(d.createdAt).toLocaleDateString("fr-FR")}</td>
                   <td>
                     <Link className="admin-btn secondary" href={`/admin/demandes/${d.id}`}>
-                      Voir
+                      {t("voir")}
                     </Link>
                   </td>
                 </tr>

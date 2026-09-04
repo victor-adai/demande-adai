@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import ParametresForm from "./parametres-form";
 
@@ -7,7 +8,8 @@ export default async function ParametresPage() {
   const settings = await prisma.roiSettings.findUnique({ where: { id: "singleton" } });
 
   if (!settings) {
-    return <div className="admin-empty">Paramètres ROI introuvables — exécutez le seed (`pnpm db:seed`).</div>;
+    const t = await getTranslations("AdminParametres");
+    return <div className="admin-empty">{t("missing")}</div>;
   }
 
   return (
