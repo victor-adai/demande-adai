@@ -17,7 +17,11 @@ export default function AdminSidebar() {
 
   return (
     <aside className="admin-sidebar">
-      <div className="brand">ΛDΛI</div>
+      <div className="brand">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/adai-logo.png" alt="" className="brand-mark" />
+        <span className="brand-text">ΛDΛI</span>
+      </div>
       <nav className="admin-nav" aria-label="Navigation admin">
         {NAV_ITEMS.map((item) => {
           const active = pathname?.startsWith(item.href);

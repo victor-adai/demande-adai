@@ -58,13 +58,11 @@
   gap: 10px;
 }
 
-.admin-sidebar .brand::before {
-  content: "";
+.admin-sidebar .brand .brand-mark {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  object-fit: contain;
   flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), var(--accent-light));
 }
 
 .admin-nav {
@@ -753,13 +751,14 @@
   .admin-shell {
     grid-template-columns: 72px 1fr;
   }
-  .admin-sidebar .brand,
+  .admin-sidebar .brand-text,
   .admin-nav a span.label,
   .admin-sidebar-footer .admin-email {
     display: none;
   }
-  .admin-sidebar .brand::before {
-    margin: 0 auto;
+  .admin-sidebar .brand {
+    justify-content: center;
+    padding: 6px 0 22px;
   }
   .admin-detail-grid {
     grid-template-columns: 1fr 1fr;
